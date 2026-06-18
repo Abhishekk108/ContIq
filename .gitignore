@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build
+build/
+dist/
+
+# Environment
+.env
+
+# Uploads
+backend/uploads/
+
+# VS Code
+.vscode/
+
+# Documentation (local only)
+context.md
+PROJECT_OVERVIEW.md
