@@ -5,7 +5,7 @@ const ragService = require('../services/ragService');
 // POST /query - Handle user questions
 router.post('/', async (req, res) => {
   try {
-    const { question } = req.body;
+    const { question, conversationHistory = [] } = req.body;
     
     if (!question || question.trim().length === 0) {
       return res.status(400).json({ error: 'Question is required' });
@@ -13,8 +13,8 @@ router.post('/', async (req, res) => {
 
     console.log('Received question:', question);
 
-    // Execute full RAG pipeline
-    const result = await ragService.generateAnswer(question);
+    // Execute full RAG pipeline with conversation history
+    const result = await ragService.generateAnswer(question, conversationHistory);
 
     res.json({
       answer: result.answer,

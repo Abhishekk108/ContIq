@@ -31,7 +31,8 @@ function ChatPage() {
 
     try {
       const response = await axios.post('http://localhost:5555/query', {
-        question: currentQuestion
+        question: currentQuestion,
+        conversationHistory: [...messages, userMessage]
       });
 
       const assistantMessage = {

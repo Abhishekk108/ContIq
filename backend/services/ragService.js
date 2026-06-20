@@ -14,9 +14,10 @@ if (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== 'placeholder_key') 
 /**
  * Generate answer using RAG pipeline
  * @param {string} query - User question
+ * @param {Array} conversationHistory - Previous messages in the conversation
  * @returns {Promise<{answer: string, sources: Array}>}
  */
-async function generateAnswer(query) {
+async function generateAnswer(query, conversationHistory = []) {
   try {
     if (!groq) {
       throw new Error('Groq API key not configured');
@@ -40,22 +41,38 @@ async function generateAnswer(query) {
     console.log('Finding similar chunks...');
     const topChunks = getTopK(queryEmbedding, storedVectors, 3);
     
-    // Step 4: Build prompt with context
+    // Step 4: Build prompt with context and conversation history
     const context = topChunks.map(chunk => chunk.text).join('\n\n---\n\n');
+    
+    // Build conversation history string from previous messages
+    let conversationContext = '';
+    if (conversationHistory && conversationHistory.length > 0) {
+      conversationContext = '\n\nPrevious conversation:\n';
+      conversationHistory.forEach(msg => {
+        if (msg.role === 'user') {
+          conversationContext += `User: ${msg.content}\n`;
+        } else if (msg.role === 'assistant') {
+          conversationContext += `Assistant: ${msg.content}\n`;
+        }
+      });
+      conversationContext += '\n---\n';
+    }
     
     const prompt = `You are an AI placement assistant helping students prepare for technical interviews.
 
 Use ONLY the context below to answer the question. Do not use outside knowledge.
 If the answer cannot be found in the context, say "I cannot find this information in the uploaded material."
 
-Context:
+Document Context:
 ${context}
+${conversationContext}
 
 Instructions:
 - Provide clear, detailed explanations with examples when possible
 - If asked to generate interview questions, create relevant questions based on the context
 - Stay focused on placement preparation and technical concepts
 - Be encouraging and supportive in your tone
+- Consider the previous conversation when answering follow-up questions
 
 User Question: ${query}
 
