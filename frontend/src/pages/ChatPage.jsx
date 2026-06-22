@@ -105,43 +105,34 @@ function ChatPage() {
           messages.map((msg, idx) => (
             <div
               key={idx}
-              className={`chat-page__message ${msg.role === 'user'
-                ? 'chat-page__message--user'
+              className={`chat-page__message-wrapper ${msg.role === 'user'
+                ? 'chat-page__message-wrapper--user'
                 : msg.isError
-                  ? 'chat-page__message--error'
-                  : 'chat-page__message--assistant'}`}
+                  ? 'chat-page__message-wrapper--error'
+                  : 'chat-page__message-wrapper--assistant'}`}
             >
               <div
-                className={`chat-page__message-header ${msg.role === 'user'
-                  ? 'chat-page__message-header--user'
+                className={`chat-page__message ${msg.role === 'user'
+                  ? 'chat-page__message--user'
                   : msg.isError
-                    ? 'chat-page__message-header--error'
-                    : 'chat-page__message-header--assistant'}`}
+                    ? 'chat-page__message--error'
+                    : 'chat-page__message--assistant'}`}
               >
-                <span className={`chat-page__message-avatar ${msg.role === 'user'
-                  ? 'chat-page__message-avatar--user'
-                  : msg.isError
-                    ? 'chat-page__message-avatar--error'
-                    : 'chat-page__message-avatar--assistant'}`}
-                >
-                  {msg.role === 'user' ? 'U' : 'A'}
-                </span>
-                {msg.role === 'user' ? 'You' : 'Contiq AI'}
-              </div>
-              <div className="chat-page__message-content">{msg.content}</div>
-              {msg.sources && msg.sources.length > 0 && (
-                <details className="chat-page__sources">
-                  <summary>View Sources ({msg.sources.length})</summary>
-                  {msg.sources.map((src, i) => (
-                    <div key={i} className="chat-page__source-item">
-                      <div className="chat-page__source-meta">
-                        Relevance Score: {(src.score * 100).toFixed(1)}%
+                <div className="chat-page__message-content">{msg.content}</div>
+                {msg.sources && msg.sources.length > 0 && (
+                  <details className="chat-page__sources">
+                    <summary>View Sources ({msg.sources.length})</summary>
+                    {msg.sources.map((src, i) => (
+                      <div key={i} className="chat-page__source-item">
+                        <div className="chat-page__source-meta">
+                          Relevance Score: {(src.score * 100).toFixed(1)}%
+                        </div>
+                        <div className="chat-page__source-text">{src.text}</div>
                       </div>
-                      <div className="chat-page__source-text">{src.text}</div>
-                    </div>
-                  ))}
-                </details>
-              )}
+                    ))}
+                  </details>
+                )}
+              </div>
             </div>
           ))
         )}
