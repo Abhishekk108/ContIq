@@ -14,6 +14,22 @@ function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const formatMessageText = (text) => {
+    if (!text) return '';
+    const formatted = text
+      .replace(/([.!?])\s+(?=[A-Z0-9"“”'`])/g, '$1\n\n')
+      .replace(/\n{2,}/g, '\n\n')
+      .trim();
+    return formatted;
+  };
+
+  const renderMessageText = (text, role) => {
+    const content = role === 'assistant' ? formatMessageText(text) : text;
+    return content.split(/\n{2,}/g).map((paragraph, index) => (
+      <p key={index}>{paragraph.trim()}</p>
+    ));
+  };
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -118,20 +134,20 @@ function ChatPage() {
                     ? 'chat-page__message--error'
                     : 'chat-page__message--assistant'}`}
               >
-                <div className="chat-page__message-content">{msg.content}</div>
-                {msg.sources && msg.sources.length > 0 && (
-                  <details className="chat-page__sources">
-                    <summary>View Sources ({msg.sources.length})</summary>
-                    {msg.sources.map((src, i) => (
-                      <div key={i} className="chat-page__source-item">
-                        <div className="chat-page__source-meta">
-                          Relevance Score: {(src.score * 100).toFixed(1)}%
-                        </div>
-                        <div className="chat-page__source-text">{src.text}</div>
-                      </div>
-                    ))}
-                  </details>
-                )}
+                <div className="chat-page__message-content">
+                  {renderMessageText(msg.content, msg.role)}
+                </div>
+                <button
+                  className="chat-page__copy-button"
+                  onClick={() => navigator.clipboard.writeText(msg.content)}
+                  title="Copy message"
+                  aria-label="Copy message"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                  </svg>
+                </button>
               </div>
             </div>
           ))
