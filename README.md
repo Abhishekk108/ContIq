@@ -28,9 +28,9 @@ Core goals: accuracy (grounded answers), transparency (source attribution), and 
 - Frontend: React 18, React Router, Axios
 - Backend: Node.js, Express, Multer
 - PDF parsing: `pdf-parse`
-- Embeddings: `@xenova/transformers` (local) or remote APIs
-- LLM: Groq (via `groq-sdk`) — configurable
-- Vector store (dev): `backend/data/vectors.json` (migrate to FAISS/Pinecone/Weaviate for production)
+- Embeddings: `@xenova/transformers` (local) — Xenova/all-MiniLM-L6-v2 model (384-dimensional vectors)
+- LLM: Groq (via `groq-sdk`) — using llama-3.3-70b-versatile
+- Vector store: Qdrant Cloud (production-ready vector database)
 
 ---
 
@@ -40,7 +40,7 @@ See the main folders:
 
 - `frontend/` — React app with `UploadPage.jsx` and `ChatPage.jsx`
 - `backend/` — Express API, routes (`upload.js`, `query.js`) and services (`pdfService.js`, `chunkService.js`, `embeddingService.js`, `vectorService.js`, `ragService.js`)
-- `backend/data/vectors.json` — persisted vector store (development)
+- Vector storage — Qdrant Cloud cluster with `contiq_vectors` collection
 
 Refer to `backend/` for pipeline details and `frontend/src/pages` for UI flows.
 
@@ -86,8 +86,11 @@ Open the frontend at `http://localhost:3000`. The backend defaults to `http://lo
 
 ## Environment Variables
 
-- `GROQ_API_KEY` — required if using Groq for generation
-- `HUGGINGFACE_API_KEY`, `OPENAI_API_KEY` — optional, used if switching embedding or generation providers
+- `GROQ_API_KEY` — required for LLM generation (Groq API)
+- `QDRANT_URL` — Qdrant Cloud cluster URL (required)
+- `QDRANT_API_KEY` — Qdrant Cloud API key (required)
+- `QDRANT_COLLECTION` — Collection name in Qdrant (default: `contiq_vectors`)
+- `HUGGINGFACE_API_KEY` — for local embedding model downloads (optional)
 
 Copy `.env.example` to `.env` and add required keys.
 
@@ -117,19 +120,20 @@ GET /
 
 1. Upload: PDF → `pdfService` extracts text.
 2. Chunk: `chunkService` splits into overlapping chunks (default: 800 chars, 100 overlap).
-3. Embed: `embeddingService` converts chunks → vectors.
-4. Store: `vectorService` persists `{ text, embedding }` to `backend/data/vectors.json`.
-5. Query: Query is embedded, `similarity.js` scores stored vectors, top-K chunks form the LLM prompt.
-6. Generate: `ragService` sends the prompt to Groq and returns `answer` + `sources`.
+3. Embed: `embeddingService` converts chunks → 384-dimensional vectors using Xenova/all-MiniLM-L6-v2.
+4. Store: `vectorService` upserts vectors to Qdrant Cloud collection with automatic collection creation.
+5. Query: Query is embedded, Qdrant performs cosine similarity search, top-K chunks form the LLM prompt.
+6. Generate: `ragService` sends the prompt to Groq (llama-3.3-70b-versatile) and returns `answer` + `sources`.
 
 ---
 
 ## Production Recommendations
 
-- Replace the JSON vector store with FAISS / Pinecone / Weaviate for scale.
-- Use a GPU-backed or managed embedding provider for faster embeddings at scale.
-- Add authentication, rate-limiting, and request size limits to the backend.
-- Move uploaded files to durable storage (S3) and stream processing for large PDFs.
+-  Vector store: Already using Qdrant Cloud (production-ready, scalable)
+- Consider GPU-backed embedding for faster processing at scale (currently using local CPU model)
+- Add authentication, rate-limiting, and request size limits to the backend
+- Move uploaded files to durable storage (S3) and stream processing for large PDFs
+- Implement document metadata tracking (filename, upload date, user ID)
 
 ---
 

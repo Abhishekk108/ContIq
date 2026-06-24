@@ -1,7 +1,6 @@
 const Groq = require('groq-sdk');
 const embeddingService = require('./embeddingService');
-const vectorService = require('./vectorService');
-const { getTopK } = require('../utils/similarity');
+const { searchVectors } = require('./vectorService');
 
 // Initialize Groq only if API key is provided
 let groq = null;
@@ -29,17 +28,13 @@ async function generateAnswer(query, conversationHistory = []) {
     console.log('Embedding query...');
     const queryEmbedding = await embeddingService.getEmbedding(query);
 
-    // Step 2: Load stored vectors
-    console.log('Loading stored vectors...');
-    const storedVectors = await vectorService.loadVectors();
-    
-    if (storedVectors.length === 0) {
+    // Step 2: Search stored vectors in Qdrant
+    console.log('Searching stored vectors...');
+    const topChunks = await searchVectors(queryEmbedding, 3);
+
+    if (topChunks.length === 0) {
       throw new Error('No documents have been uploaded yet. Please upload a PDF first.');
     }
-
-    // Step 3: Find top K similar chunks
-    console.log('Finding similar chunks...');
-    const topChunks = getTopK(queryEmbedding, storedVectors, 3);
     
     // Step 4: Build prompt with context and conversation history
     const context = topChunks.map(chunk => chunk.text).join('\n\n---\n\n');
