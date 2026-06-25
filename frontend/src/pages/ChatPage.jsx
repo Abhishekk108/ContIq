@@ -9,6 +9,7 @@ function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(null);
   const messagesEndRef = useRef(null);
   const navigate = useNavigate();
 
@@ -40,11 +41,86 @@ function ChatPage() {
           h1: ({node, ...props}) => <h1 style={{fontSize: '1.5em', fontWeight: 'bold', marginTop: '0.5em', marginBottom: '0.5em'}} {...props} />,
           h2: ({node, ...props}) => <h2 style={{fontSize: '1.3em', fontWeight: 'bold', marginTop: '0.8em', marginBottom: '0.5em'}} {...props} />,
           h3: ({node, ...props}) => <h3 style={{fontSize: '1.1em', fontWeight: 'bold', marginTop: '0.5em', marginBottom: '0.4em'}} {...props} />,
-          // Customize code blocks
-          code: ({node, inline, ...props}) => 
-            inline 
-              ? <code style={{backgroundColor: '#f3f4f6', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.9em'}} {...props} />
-              : <code style={{display: 'block', backgroundColor: '#1f2937', color: '#e5e7eb', padding: '12px', borderRadius: '6px', fontFamily: 'monospace', fontSize: '0.9em', overflowX: 'auto', marginTop: '0.5em', marginBottom: '0.5em'}} {...props} />,
+          // Customize code blocks with copy button
+          code: ({node, inline, children, ...props}) => {
+            if (inline) {
+              return <code style={{backgroundColor: '#f3f4f6', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.9em'}} {...props}>{children}</code>;
+            }
+            
+            // Block code with copy button
+            const codeContent = String(children).replace(/\n$/, '');
+            const codeId = `code-${Math.random().toString(36).substr(2, 9)}`;
+            const isCopied = copiedCode === codeId;
+            
+            return (
+              <div style={{position: 'relative', marginTop: '0.5em', marginBottom: '0.5em'}}>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(codeContent);
+                    setCopiedCode(codeId);
+                    setTimeout(() => setCopiedCode(null), 2000);
+                  }}
+                  style={{
+                    position: 'absolute',
+                    top: '8px',
+                    right: '8px',
+                    background: isCopied ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                    border: isCopied ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '4px',
+                    padding: '6px 10px',
+                    cursor: 'pointer',
+                    color: isCopied ? '#10b981' : '#e5e7eb',
+                    fontSize: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isCopied) {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isCopied) {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                    }
+                  }}
+                  title={isCopied ? "Copied!" : "Copy code"}
+                >
+                  {isCopied ? (
+                    <>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                      </svg>
+                      Copy
+                    </>
+                  )}
+                </button>
+                <code style={{
+                  display: 'block',
+                  backgroundColor: '#1f2937',
+                  color: '#e5e7eb',
+                  padding: '12px',
+                  paddingTop: '40px',
+                  borderRadius: '6px',
+                  fontFamily: 'monospace',
+                  fontSize: '0.9em',
+                  overflowX: 'auto'
+                }} {...props}>
+                  {children}
+                </code>
+              </div>
+            );
+          },
           // Customize tables
           table: ({node, ...props}) => <table style={{width: '100%', borderCollapse: 'collapse', marginTop: '0.5em', marginBottom: '0.5em'}} {...props} />,
           th: ({node, ...props}) => <th style={{border: '1px solid #d1d5db', padding: '8px', backgroundColor: '#f3f4f6', textAlign: 'left', fontWeight: 'bold'}} {...props} />,
