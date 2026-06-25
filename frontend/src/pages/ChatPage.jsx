@@ -1,12 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import './ChatPage.css';
 
 function ChatPage() {
   const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef(null);
   const navigate = useNavigate();
 
@@ -24,10 +26,42 @@ function ChatPage() {
   };
 
   const renderMessageText = (text, role) => {
-    const content = role === 'assistant' ? formatMessageText(text) : text;
-    return content.split(/\n{2,}/g).map((paragraph, index) => (
-      <p key={index}>{paragraph.trim()}</p>
-    ));
+    if (role === 'user') {
+      // User messages - simple text rendering
+      return <p>{text}</p>;
+    }
+    
+    // Assistant messages - render as Markdown
+    return (
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          // Customize heading styles
+          h1: ({node, ...props}) => <h1 style={{fontSize: '1.5em', fontWeight: 'bold', marginTop: '0.5em', marginBottom: '0.5em'}} {...props} />,
+          h2: ({node, ...props}) => <h2 style={{fontSize: '1.3em', fontWeight: 'bold', marginTop: '0.8em', marginBottom: '0.5em'}} {...props} />,
+          h3: ({node, ...props}) => <h3 style={{fontSize: '1.1em', fontWeight: 'bold', marginTop: '0.5em', marginBottom: '0.4em'}} {...props} />,
+          // Customize code blocks
+          code: ({node, inline, ...props}) => 
+            inline 
+              ? <code style={{backgroundColor: '#f3f4f6', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.9em'}} {...props} />
+              : <code style={{display: 'block', backgroundColor: '#1f2937', color: '#e5e7eb', padding: '12px', borderRadius: '6px', fontFamily: 'monospace', fontSize: '0.9em', overflowX: 'auto', marginTop: '0.5em', marginBottom: '0.5em'}} {...props} />,
+          // Customize tables
+          table: ({node, ...props}) => <table style={{width: '100%', borderCollapse: 'collapse', marginTop: '0.5em', marginBottom: '0.5em'}} {...props} />,
+          th: ({node, ...props}) => <th style={{border: '1px solid #d1d5db', padding: '8px', backgroundColor: '#f3f4f6', textAlign: 'left', fontWeight: 'bold'}} {...props} />,
+          td: ({node, ...props}) => <td style={{border: '1px solid #d1d5db', padding: '8px'}} {...props} />,
+          // Customize lists
+          ul: ({node, ...props}) => <ul style={{marginLeft: '1.5em', marginTop: '0.3em', marginBottom: '0.3em'}} {...props} />,
+          ol: ({node, ...props}) => <ol style={{marginLeft: '1.5em', marginTop: '0.3em', marginBottom: '0.3em'}} {...props} />,
+          li: ({node, ...props}) => <li style={{marginTop: '0.2em', marginBottom: '0.2em'}} {...props} />,
+          // Customize paragraphs
+          p: ({node, ...props}) => <p style={{marginTop: '0.5em', marginBottom: '0.5em', lineHeight: '1.6'}} {...props} />,
+          // Customize strong/bold
+          strong: ({node, ...props}) => <strong style={{fontWeight: '600', color: '#1f2937'}} {...props} />,
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    );
   };
 
   useEffect(() => {
@@ -44,30 +78,94 @@ function ChatPage() {
     setMessages(prev => [...prev, userMessage]);
     setQuestion('');
     setLoading(true);
+    setIsStreaming(true);
+
+    // Create a placeholder assistant message for streaming
+    const assistantMessageIndex = messages.length + 1;
+    setMessages(prev => [...prev, { role: 'assistant', content: '', sources: [] }]);
 
     try {
-      const response = await axios.post('http://localhost:5555/query', {
-        question: currentQuestion,
-        conversationHistory: [...messages, userMessage]
+      const response = await fetch('http://localhost:5555/query/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          question: currentQuestion,
+          conversationHistory: [...messages, userMessage]
+        })
       });
 
-      const assistantMessage = {
-        role: 'assistant',
-        content: response.data.answer || 'No answer received',
-        sources: response.data.sources || []
-      };
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let answerSoFar = '';
+      let sources = [];
 
-      setMessages(prev => [...prev, assistantMessage]);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const raw = decoder.decode(value);
+        const lines = raw.split('\n').filter(l => l.startsWith('data: '));
+
+        for (const line of lines) {
+          const json = JSON.parse(line.replace('data: ', ''));
+          
+          if (json.token) {
+            answerSoFar += json.token;
+            // Update the assistant message with accumulated tokens
+            setMessages(prev => {
+              const newMessages = [...prev];
+              newMessages[assistantMessageIndex] = {
+                role: 'assistant',
+                content: answerSoFar,
+                sources: []
+              };
+              return newMessages;
+            });
+          }
+          
+          if (json.done) {
+            sources = json.sources || [];
+            // Update with final sources
+            setMessages(prev => {
+              const newMessages = [...prev];
+              newMessages[assistantMessageIndex] = {
+                role: 'assistant',
+                content: answerSoFar || 'No answer received',
+                sources: sources
+              };
+              return newMessages;
+            });
+          }
+
+          if (json.error) {
+            // Handle streaming error
+            setMessages(prev => {
+              const newMessages = [...prev];
+              newMessages[assistantMessageIndex] = {
+                role: 'assistant',
+                content: `Error: ${json.error}`,
+                isError: true
+              };
+              return newMessages;
+            });
+          }
+        }
+      }
+
     } catch (error) {
-      const errorMsg = error.response?.data?.error || error.message;
-      const errorMessage = {
-        role: 'assistant',
-        content: `Error: ${errorMsg}`,
-        isError: true
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      const errorMsg = error.message || 'Failed to connect to server';
+      setMessages(prev => {
+        const newMessages = [...prev];
+        newMessages[assistantMessageIndex] = {
+          role: 'assistant',
+          content: `Error: ${errorMsg}`,
+          isError: true
+        };
+        return newMessages;
+      });
     } finally {
       setLoading(false);
+      setIsStreaming(false);
     }
   };
 
@@ -136,6 +234,9 @@ function ChatPage() {
               >
                 <div className="chat-page__message-content">
                   {renderMessageText(msg.content, msg.role)}
+                  {msg.role === 'assistant' && isStreaming && idx === messages.length - 1 && (
+                    <span className="chat-page__cursor">▊</span>
+                  )}
                 </div>
                 <button
                   className="chat-page__copy-button"
@@ -152,7 +253,7 @@ function ChatPage() {
             </div>
           ))
         )}
-        {loading && (
+        {loading && !isStreaming && (
           <div className="chat-page__loading">
             <div className="chat-page__loading-indicator" />
             <span className="chat-page__loading-text">Generating response...</span>
