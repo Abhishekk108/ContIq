@@ -4,54 +4,75 @@ import { useNavigate } from 'react-router-dom';
 import './UploadPage.css';
 
 function UploadPage() {
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState('');
   const [progress, setProgress] = useState('');
   const navigate = useNavigate();
 
   const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    setFile(selectedFile);
+    const selectedFiles = Array.from(e.target.files);
+    setFiles(selectedFiles);
     setMessage('');
     
-    if (selectedFile) {
-      const fileSizeMB = (selectedFile.size / (1024 * 1024)).toFixed(2);
-      setMessage(`Selected: ${selectedFile.name} (${fileSizeMB} MB)`);
+    if (selectedFiles.length > 0) {
+      const totalSize = selectedFiles.reduce((sum, f) => sum + f.size, 0);
+      const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(2);
+      setMessage(`Selected ${selectedFiles.length} file(s) - Total: ${totalSizeMB} MB`);
     }
   };
 
   const handleUpload = async () => {
-    if (!file) {
-      setMessage('Please select a PDF file');
+    if (files.length === 0) {
+      setMessage('Please select at least one PDF file');
       return;
     }
 
-    if (file.type !== 'application/pdf') {
-      setMessage('Please select a valid PDF file');
+    // Check all files are PDFs
+    const nonPdfFiles = files.filter(f => f.type !== 'application/pdf');
+    if (nonPdfFiles.length > 0) {
+      setMessage(`Please select only PDF files. Found: ${nonPdfFiles.map(f => f.name).join(', ')}`);
       return;
     }
-
-    const formData = new FormData();
-    formData.append('pdf', file);
 
     setUploading(true);
-    setProgress('Uploading PDF...');
+    setProgress('Starting upload...');
     setMessage('');
+    const uploaded = [];
 
     try {
-      const response = await axios.post('http://localhost:5555/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          setProgress(`Uploading: ${percentCompleted}%`);
-        }
-      });
+      // Upload each file sequentially
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        setProgress(`Uploading ${i + 1}/${files.length}: ${file.name}`);
+        
+        const formData = new FormData();
+        formData.append('pdf', file);
+
+        const response = await axios.post('http://localhost:5555/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setProgress(`Uploading ${i + 1}/${files.length}: ${file.name} (${percentCompleted}%)`);
+          }
+        });
+        
+        uploaded.push({
+          fileId: response.data.fileId,
+          filename: response.data.filename
+        });
+      }
       
-      setProgress('Processing complete');
-      setMessage(`Success! Created ${response.data.chunksCreated} knowledge chunks. Redirecting to chat...`);
+      setProgress('All files processed successfully!');
+      setMessage(`Success! Uploaded ${uploaded.length} PDF(s). Redirecting to chat...`);
       
-      setTimeout(() => navigate('/chat'), 2500);
+      setTimeout(() => {
+        navigate('/chat', { 
+          state: { 
+            uploadedFiles: uploaded
+          }
+        });
+      }, 2500);
     } catch (error) {
       const errorMsg = error.response?.data?.error || error.message;
       setMessage(`Upload failed: ${errorMsg}`);
@@ -94,46 +115,51 @@ function UploadPage() {
             </div>
 
             <label htmlFor="file-upload" className="upload-page__upload-label">
-              Choose PDF File
+              Choose PDF Files
             </label>
             <input
               id="file-upload"
               type="file"
               accept=".pdf"
+              multiple
               onChange={handleFileChange}
               className="upload-page__hidden-input"
             />
 
-            <p className="upload-page__file-note">or drag and drop your file here</p>
+            <p className="upload-page__file-note">or drag and drop your files here (multiple selection supported)</p>
           </div>
 
-          {file && (
+          {files.length > 0 && (
             <div className="upload-page__file-info">
-              <svg
-                className="upload-page__file-icon"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#667eea"
-                strokeWidth="2"
-              >
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-              </svg>
-              <div className="upload-page__file-details">
-                <p className="upload-page__file-name">{file.name}</p>
-                <p className="upload-page__file-message">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
-              </div>
+              {files.map((file, index) => (
+                <div key={index} style={{display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px'}}>
+                  <svg
+                    className="upload-page__file-icon"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#667eea"
+                    strokeWidth="2"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                  </svg>
+                  <div className="upload-page__file-details">
+                    <p className="upload-page__file-name">{file.name}</p>
+                    <p className="upload-page__file-message">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
           <button
             onClick={handleUpload}
-            disabled={uploading || !file}
+            disabled={uploading || files.length === 0}
             className="upload-page__button"
           >
-            {uploading ? 'Processing...' : 'Upload & Process'}
+            {uploading ? 'Processing...' : `Upload & Process ${files.length > 0 ? `(${files.length} file${files.length > 1 ? 's' : ''})` : ''}`}
           </button>
 
           {progress && (

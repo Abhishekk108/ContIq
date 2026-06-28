@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
+const { v4: uuidv4 } = require('uuid');
 const pdfService = require('../services/pdfService');
 const chunkService = require('../services/chunkService');
 const embeddingService = require('../services/embeddingService');
@@ -41,8 +42,14 @@ router.post('/', upload.single('pdf'), async (req, res) => {
       return res.status(400).json({ error: 'No PDF file uploaded' });
     }
 
+    // Generate unique file ID and capture filename
+    const fileId = uuidv4();
+    const filename = req.file.originalname;
+
     filePath = req.file.path;
     console.log('PDF uploaded:', filePath);
+    console.log('File ID:', fileId);
+    console.log('Filename:', filename);
 
     // Step 1: Extract text from PDF
     console.log('Extracting text from PDF...');
@@ -68,22 +75,32 @@ router.post('/', upload.single('pdf'), async (req, res) => {
     const embeddings = await embeddingService.getEmbeddings(chunks);
     console.log(`Generated ${embeddings.length} embeddings`);
 
-    // Step 4: Store vectors
+    // Step 4: Store vectors with metadata
     console.log('Storing vectors...');
-    const vectors = chunks.map((text, index) => ({
+    const chunksWithMeta = chunks.map((text, i) => ({
       text,
-      embedding: embeddings[index]
+      fileId,
+      filename
+    }));
+    
+    const vectors = chunksWithMeta.map((chunk, index) => ({
+      text: chunk.text,
+      embedding: embeddings[index],
+      fileId: chunk.fileId,
+      filename: chunk.filename
     }));
     
     await vectorService.saveVectors(vectors);
-    console.log('Vectors saved successfully');
+    console.log('Vectors saved successfully with metadata');
 
     // Clean up uploaded file
     await fs.unlink(filePath);
 
     res.json({ 
-      message: 'PDF processed successfully',
-      chunksCreated: chunks.length,
+      success: true,
+      fileId,
+      filename,
+      chunkCount: chunks.length,
       status: 'success'
     });
   } catch (error) {

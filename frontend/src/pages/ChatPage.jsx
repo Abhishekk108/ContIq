@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import './ChatPage.css';
@@ -10,8 +10,41 @@ function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [copiedCode, setCopiedCode] = useState(null);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [selectedFileId, setSelectedFileId] = useState(null);
   const messagesEndRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Handle uploaded file from navigation state
+  useEffect(() => {
+    if (location.state?.uploadedFile) {
+      // Single file upload (backward compatibility)
+      const { fileId, filename } = location.state.uploadedFile;
+      setUploadedFiles(prev => {
+        if (prev.some(f => f.fileId === fileId)) {
+          return prev;
+        }
+        return [...prev, { fileId, filename }];
+      });
+      // Auto-select the newly uploaded file
+      setSelectedFileId(fileId);
+      navigate(location.pathname, { replace: true, state: {} });
+    } else if (location.state?.uploadedFiles) {
+      // Multiple files upload
+      const newFiles = location.state.uploadedFiles;
+      setUploadedFiles(prev => {
+        const existingIds = new Set(prev.map(f => f.fileId));
+        const filesToAdd = newFiles.filter(f => !existingIds.has(f.fileId));
+        return [...prev, ...filesToAdd];
+      });
+      // Auto-select the first newly uploaded file
+      if (newFiles.length > 0) {
+        setSelectedFileId(newFiles[0].fileId);
+      }
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -166,7 +199,8 @@ function ChatPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           question: currentQuestion,
-          conversationHistory: [...messages, userMessage]
+          conversationHistory: [...messages, userMessage],
+          fileId: selectedFileId
         })
       });
 
@@ -338,7 +372,83 @@ function ChatPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSubmit} className="chat-page__form">
+      {/* File Selector */}
+      {uploadedFiles.length > 0 && (
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          padding: '12px 16px',
+          background: 'white',
+          borderRadius: '12px 12px 0 0',
+          border: '1px solid #e5e7eb',
+          borderBottom: 'none',
+          overflowX: 'auto'
+        }}>
+          <button
+            onClick={() => setSelectedFileId(null)}
+            style={{
+              padding: '6px 14px',
+              fontSize: '13px',
+              borderRadius: '20px',
+              border: selectedFileId === null ? '1.5px solid #2563eb' : '1px solid #d1d5db',
+              background: selectedFileId === null ? '#eff6ff' : 'white',
+              color: selectedFileId === null ? '#2563eb' : '#6b7280',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              fontWeight: selectedFileId === null ? '600' : '400',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              if (selectedFileId !== null) {
+                e.currentTarget.style.background = '#f9fafb';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (selectedFileId !== null) {
+                e.currentTarget.style.background = 'white';
+              }
+            }}
+          >
+            All PDFs
+          </button>
+          {uploadedFiles.map((file) => (
+            <button
+              key={file.fileId}
+              onClick={() => setSelectedFileId(file.fileId)}
+              style={{
+                padding: '6px 14px',
+                fontSize: '13px',
+                borderRadius: '20px',
+                border: selectedFileId === file.fileId ? '1.5px solid #2563eb' : '1px solid #d1d5db',
+                background: selectedFileId === file.fileId ? '#eff6ff' : 'white',
+                color: selectedFileId === file.fileId ? '#2563eb' : '#6b7280',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                fontWeight: selectedFileId === file.fileId ? '600' : '400',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                if (selectedFileId !== file.fileId) {
+                  e.currentTarget.style.background = '#f9fafb';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (selectedFileId !== file.fileId) {
+                  e.currentTarget.style.background = 'white';
+                }
+              }}
+              title={file.filename}
+            >
+              📄 {file.filename.length > 20 ? file.filename.substring(0, 17) + '...' : file.filename}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="chat-page__form" style={{
+        borderTopLeftRadius: uploadedFiles.length > 0 ? '0' : '12px',
+        borderTopRightRadius: uploadedFiles.length > 0 ? '0' : '12px'
+      }}>
         <input
           type="text"
           value={question}

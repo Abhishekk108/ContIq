@@ -5,16 +5,19 @@ const { generateAnswer, streamAnswer } = require('../services/ragService');
 // POST /query - Handle user questions
 router.post('/', async (req, res) => {
   try {
-    const { question, conversationHistory = [] } = req.body;
+    const { question, conversationHistory = [], fileId = null } = req.body;
     
     if (!question || question.trim().length === 0) {
       return res.status(400).json({ error: 'Question is required' });
     }
 
     console.log('Received question:', question);
+    if (fileId) {
+      console.log('Filtering by fileId:', fileId);
+    }
 
     // Execute full RAG pipeline with conversation history
-    const result = await generateAnswer(question, conversationHistory);
+    const result = await generateAnswer(question, conversationHistory, fileId);
 
     res.json({
       answer: result.answer,
@@ -33,17 +36,20 @@ router.post('/', async (req, res) => {
 // POST /query/stream - Handle user questions with streaming response
 router.post('/stream', async (req, res) => {
   try {
-    const { question, conversationHistory = [] } = req.body;
+    const { question, conversationHistory = [], fileId = null } = req.body;
     
     if (!question || question.trim().length === 0) {
       return res.status(400).json({ error: 'Question is required' });
     }
 
     console.log('Received streaming question:', question);
+    if (fileId) {
+      console.log('Filtering by fileId:', fileId);
+    }
 
     // Execute RAG pipeline with streaming
     // streamAnswer handles setting SSE headers and writing to res
-    await streamAnswer(question, res, conversationHistory);
+    await streamAnswer(question, res, conversationHistory, fileId);
     
   } catch (error) {
     console.error('Streaming query error:', error);
