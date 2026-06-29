@@ -302,3 +302,33 @@
   0%, 50% { opacity: 1; }
   51%, 100% { opacity: 0; }
 }
+
+.chat-page__scroll-button {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #2563eb;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  transition: all 0.2s;
+  z-index: 10;
+  color: white;
+}
+
+.chat-page__scroll-button:hover {
+  background: #1d4ed8;
+  transform: translateX(-50%) scale(1.1);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+}
+
+.chat-page__scroll-button:active {
+  transform: translateX(-50%) scale(0.95);
+}

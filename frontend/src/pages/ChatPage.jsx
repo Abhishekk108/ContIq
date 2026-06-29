@@ -12,7 +12,9 @@ function ChatPage() {
   const [copiedCode, setCopiedCode] = useState(null);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [selectedFileId, setSelectedFileId] = useState(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -48,6 +50,12 @@ function ChatPage() {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleScroll = (e) => {
+    const element = e.target;
+    const isNearBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 100;
+    setShowScrollButton(!isNearBottom);
   };
 
   const formatMessageText = (text) => {
@@ -296,7 +304,11 @@ function ChatPage() {
 
   return (
     <div className="chat-page">
-      <div className="chat-page__messages">
+      <div 
+        className="chat-page__messages"
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+      >
         {messages.length === 0 ? (
           <div>
             <p className="chat-page__empty-state">Start asking questions about your uploaded PDF</p>
@@ -361,6 +373,20 @@ function ChatPage() {
         )}
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Scroll to Bottom Button */}
+      {showScrollButton && (
+        <button
+          onClick={scrollToBottom}
+          className="chat-page__scroll-button"
+          title="Scroll to bottom"
+          aria-label="Scroll to bottom"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+      )}
 
       {/* File Selector */}
       {uploadedFiles.length > 0 && (
