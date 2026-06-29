@@ -296,16 +296,6 @@ function ChatPage() {
 
   return (
     <div className="chat-page">
-      <div className="chat-page__header">
-        <div>
-          <h2 className="chat-page__title">Chat with Your Material</h2>
-          <p className="chat-page__subtitle">Ask questions about your uploaded content</p>
-        </div>
-        <button onClick={handleNewUpload} className="chat-page__upload-button">
-          Upload New PDF
-        </button>
-      </div>
-
       <div className="chat-page__messages">
         {messages.length === 0 ? (
           <div>
@@ -457,6 +447,9 @@ function ChatPage() {
           disabled={loading}
           className="chat-page__input"
         />
+        <button onClick={handleNewUpload} className="chat-page__upload-button">
+          Upload 
+        </button>
         <button
           type="submit"
           disabled={loading || !question.trim()}
