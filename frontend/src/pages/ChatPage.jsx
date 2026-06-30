@@ -392,36 +392,38 @@ function ChatPage() {
       {uploadedFiles.length > 0 && (
         <div style={{
           display: 'flex',
-          gap: '8px',
-          padding: '12px 16px',
-          background: 'white',
+          gap: '10px',
+          padding: '16px 20px',
+          background: '#FFFFFF',
           borderRadius: '12px 12px 0 0',
-          border: '1px solid #e5e7eb',
+          border: '1px solid #E2E8F0',
           borderBottom: 'none',
           overflowX: 'auto'
         }}>
           <button
             onClick={() => setSelectedFileId(null)}
             style={{
-              padding: '6px 14px',
+              padding: '8px 16px',
               fontSize: '13px',
               borderRadius: '20px',
-              border: selectedFileId === null ? '1.5px solid #2563eb' : '1px solid #d1d5db',
-              background: selectedFileId === null ? '#eff6ff' : 'white',
-              color: selectedFileId === null ? '#2563eb' : '#6b7280',
+              border: '1px solid #E2E8F0',
+              background: selectedFileId === null ? '#7C3AED' : '#FFFFFF',
+              color: selectedFileId === null ? '#FFFFFF' : '#64748B',
               cursor: 'pointer',
               whiteSpace: 'nowrap',
-              fontWeight: selectedFileId === null ? '600' : '400',
+              fontWeight: selectedFileId === null ? '600' : '500',
               transition: 'all 0.2s'
             }}
             onMouseEnter={(e) => {
               if (selectedFileId !== null) {
-                e.currentTarget.style.background = '#f9fafb';
+                e.currentTarget.style.background = '#F8FAFC';
+                e.currentTarget.style.borderColor = '#7C3AED';
               }
             }}
             onMouseLeave={(e) => {
               if (selectedFileId !== null) {
-                e.currentTarget.style.background = 'white';
+                e.currentTarget.style.background = '#FFFFFF';
+                e.currentTarget.style.borderColor = '#E2E8F0';
               }
             }}
           >
@@ -432,25 +434,27 @@ function ChatPage() {
               key={file.fileId}
               onClick={() => setSelectedFileId(file.fileId)}
               style={{
-                padding: '6px 14px',
+                padding: '8px 16px',
                 fontSize: '13px',
                 borderRadius: '20px',
-                border: selectedFileId === file.fileId ? '1.5px solid #2563eb' : '1px solid #d1d5db',
-                background: selectedFileId === file.fileId ? '#eff6ff' : 'white',
-                color: selectedFileId === file.fileId ? '#2563eb' : '#6b7280',
+                border: '1px solid #E2E8F0',
+                background: selectedFileId === file.fileId ? '#7C3AED' : '#FFFFFF',
+                color: selectedFileId === file.fileId ? '#FFFFFF' : '#64748B',
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
-                fontWeight: selectedFileId === file.fileId ? '600' : '400',
+                fontWeight: selectedFileId === file.fileId ? '600' : '500',
                 transition: 'all 0.2s'
               }}
               onMouseEnter={(e) => {
                 if (selectedFileId !== file.fileId) {
-                  e.currentTarget.style.background = '#f9fafb';
+                  e.currentTarget.style.background = '#F8FAFC';
+                  e.currentTarget.style.borderColor = '#7C3AED';
                 }
               }}
               onMouseLeave={(e) => {
                 if (selectedFileId !== file.fileId) {
-                  e.currentTarget.style.background = 'white';
+                  e.currentTarget.style.background = '#FFFFFF';
+                  e.currentTarget.style.borderColor = '#E2E8F0';
                 }
               }}
               title={file.filename}
@@ -462,8 +466,8 @@ function ChatPage() {
       )}
 
       <form onSubmit={handleSubmit} className="chat-page__form" style={{
-        borderTopLeftRadius: uploadedFiles.length > 0 ? '0' : '12px',
-        borderTopRightRadius: uploadedFiles.length > 0 ? '0' : '12px'
+        borderTopLeftRadius: uploadedFiles.length > 0 ? '0' : '16px',
+        borderTopRightRadius: uploadedFiles.length > 0 ? '0' : '16px'
       }}>
         <input
           type="text"

@@ -7,31 +7,26 @@ import "./App.css";
 function App() {
   return (
     <Router>
-      <div className="App" style={{ minHeight: '100vh', background: '#f8fafc' ,margin:"0px"}}>
+      <div className="App" style={{ minHeight: '100vh', background: '#F8FAFC', margin: "0px" }}>
         <header style={{ 
-            height: '90px',
-            width:"",
-            padding: '0',
-            margin:"0px", 
-            background: '#FEFDFD', 
-            borderBottom: '0px solid #e5e7eb',
+            height: '80px',
+            padding: '0 32px',
+            margin: "0px", 
+            background: '#FFFFFF', 
+            borderBottom: '1px solid #E2E8F0',
             display: 'flex',
             alignItems: 'center',
-            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+            boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
           }}>
-            
-              <img 
-                src="/logo.png" 
-                alt="Contiq Logo" 
-                style={{ 
-                  height: '90%',
-                  width: 'auto',
-                  marginLeft:"20px",
-                  objectFit: 'contain',
-                  transform: 'scale(1.12)' 
-                }} 
-              />
-            
+            <img 
+              src="/logo.png" 
+              alt="ContIQ Logo" 
+              style={{ 
+                height: '80px',
+                width: 'auto',
+                objectFit: 'contain'
+              }} 
+            />
           </header>
         <Routes>
           <Route path="/" element={<UploadPage />} />

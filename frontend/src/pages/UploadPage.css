@@ -1,138 +1,178 @@
+/* UploadPage - Modern SaaS/AI Design */
+
 .upload-page {
   min-height: calc(100vh - 80px);
+  background: #F8FAFC;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  padding: 48px 24px;
 }
 
 .upload-page__container {
-  max-width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
+/* Header Section - Clean White Background */
 .upload-page__header {
   text-align: center;
-  color: rgb(255, 255, 255);
-  width: 100% !important;
-  height: 15rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-
+  color: #0F172A;
+  background: transparent;
+  padding: 32px 0 48px;
 }
 
 .upload-page__title {
-  font-size: 42px;
+  font-size: 48px;
   font-weight: 700;
-  margin-top: 0px;
-  padding-top: 60px;
-  letter-spacing: -1px;
+  margin: 0 0 16px 0;
+  color: #0F172A;
+  letter-spacing: -1.5px;
+  line-height: 1.2;
 }
 
 .upload-page__subtitle {
   font-size: 18px;
   line-height: 1.6;
-  max-width: 700px;
+  max-width: 600px;
   margin: 0 auto;
-  opacity: 0.95;
+  color: #64748B;
+  font-weight: 400;
 }
 
+/* Upload Card - Clean White Container */
 .upload-page__card {
-  background: white;
+  background: #FFFFFF;
   border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  padding: 60px;
-  margin-top: 40px!important;
-  max-width: 800px;
-  margin: 0 auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #E2E8F0;
+  padding: 48px;
+  max-width: 700px;
+  margin: 0 auto 48px;
 }
 
+/* Dropzone - Minimal Border Style */
 .upload-page__dropzone {
-  border: 3px dashed #667eea;
+  border: 2px dashed #E2E8F0;
   border-radius: 12px;
-  padding: 60px 40px;
+  padding: 48px 32px;
   text-align: center;
-  background: #f8f9ff;
+  background: #F8FAFC;
   transition: all 0.3s;
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
 
+.upload-page__dropzone:hover {
+  border-color: #2563EB;
+  background: #EFF6FF;
+}
+
+.upload-page__dropzone-icon-wrapper {
+  margin-bottom: 24px;
+}
+
+/* Upload Button - Solid Blue Primary */
 .upload-page__upload-label {
   display: inline-block;
-  padding: 16px 40px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 14px 32px;
+  background: #2563EB;
   color: white;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all 0.2s;
   border: none;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .upload-page__upload-label:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+  background: #1d4ed8;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.upload-page__upload-label:active {
+  transform: translateY(1px);
 }
 
 .upload-page__file-note {
-  margin-top: 20px;
-  color: #6b7280;
+  margin-top: 16px;
+  color: #64748B;
   font-size: 14px;
 }
 
+/* File Info Display */
 .upload-page__file-info {
-  margin-bottom: 30px;
-  padding: 20px;
-  background: #f8f9ff;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #F8FAFC;
   border-radius: 8px;
-  border: 1px solid #e0e7ff;
+  border: 1px solid #E2E8F0;
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
+.upload-page__file-icon {
+  flex-shrink: 0;
+  color: #7C3AED;
+}
+
+.upload-page__file-details {
+  flex: 1;
+  min-width: 0;
+}
+
 .upload-page__file-name {
   font-weight: 600;
-  color: #111827;
+  color: #0F172A;
+  font-size: 15px;
+  word-break: break-word;
 }
 
 .upload-page__file-message {
-  color: #374151;
-  font-size: 14px;
+  color: #64748B;
+  font-size: 13px;
+  margin-top: 4px;
 }
 
+/* Action Buttons */
 .upload-page__actions {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .upload-page__button {
-  padding: 16px 20px;
-  background: #10b981;
+  padding: 14px 24px;
+  background: #22C55E;
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .upload-page__button:hover {
-  background: #059669;
+  background: #16a34a;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25);
 }
 
 .upload-page__button:disabled {
-  background: #d1d5db;
+  background: #E2E8F0;
+  color: #94a3b8;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .upload-page__message {
-  color: #111827;
+  color: #0F172A;
   font-size: 14px;
 }
 
 .upload-page__progress {
-  color: #6b7280;
+  color: #64748B;
   font-size: 14px;
 }
 
@@ -140,38 +180,27 @@
   display: none;
 }
 
-.upload-page__dropzone-icon-wrapper {
-  margin-bottom: 30px;
-}
-
-.upload-page__file-icon {
-  flex-shrink: 0;
-}
-
-.upload-page__file-details {
-  flex: 1;
-}
-
+/* Status Messages */
 .upload-page__status {
   margin-top: 24px;
-  padding: 16px;
+  padding: 14px 16px;
   border-radius: 8px;
   text-align: center;
 }
 
 .upload-page__status--progress {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
 }
 
 .upload-page__status--success {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
 }
 
 .upload-page__status--error {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
 }
 
 .upload-page__status p {
@@ -181,86 +210,127 @@
 }
 
 .upload-page__status--progress p {
-  color: #1e40af;
+  color: #2563EB;
 }
 
 .upload-page__status--success p {
-  color: #166534;
+  color: #22C55E;
 }
 
 .upload-page__status--error p {
-  color: #991b1b;
+  color: #EF4444;
 }
 
+/* Info Cards Section */
 .upload-page__info-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 24px;
-  width:80rem !important;
-  margin-top: 40px;
-  margin-left: 100px;
-  justify-content: center;
-  flex-wrap: wrap;
+  max-width: 1000px;
+  margin: 48px auto 0;
+  padding: 0 24px;
 }
 
 .upload-page__info-card {
-  background: white;
-  padding: 20px;
+  background: #FFFFFF;
+  padding: 24px;
   display: flex;
   align-items: flex-start;
   gap: 16px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  flex: 1;
-  min-width: 280px;
-  max-width: 320px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
+}
+
+.upload-page__info-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
 .upload-page__info-icon {
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  background: #7C3AED;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
+.upload-page__info-content {
+  flex: 1;
+}
+
 .upload-page__info-title {
   font-size: 16px;
   font-weight: 600;
-  color: #1a1a1a;
-  margin: 0 0 6px 0;
+  color: #0F172A;
+  margin: 0 0 8px 0;
 }
 
 .upload-page__info-text {
-  font-size: 13px;
-  color: #6b7280;
+  font-size: 14px;
+  color: #64748B;
   line-height: 1.5;
   margin: 0;
 }
 
+/* Guidelines Section */
 .upload-page__guidelines {
-  background: rgba(255, 255, 255, 0.95);
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
   border-radius: 12px;
-  padding: 30px;
-  margin-top: 40px;
+  padding: 32px;
+  margin: 48px auto 0;
   max-width: 800px;
-  margin: 40px auto 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .upload-page__guidelines-title {
-  color: #1a1a1a;
-  margin-bottom: 20px;
+  color: #0F172A;
+  margin: 0 0 16px 0;
   font-size: 18px;
   font-weight: 600;
 }
 
 .upload-page__guidelines-list {
-  color: #4b5563;
-  line-height: 2;
+  color: #64748B;
+  line-height: 1.8;
   margin: 0;
-  padding-left: 24px;
-  font-size: 15px;
+  padding-left: 20px;
+  font-size: 14px;
+}
+
+.upload-page__guidelines-list li {
+  margin-bottom: 8px;
+}
+
+.upload-page__guidelines-list li:last-child {
+  margin-bottom: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .upload-page {
+    padding: 32px 16px;
+  }
+
+  .upload-page__title {
+    font-size: 36px;
+  }
+
+  .upload-page__subtitle {
+    font-size: 16px;
+  }
+
+  .upload-page__card {
+    padding: 32px 24px;
+  }
+
+  .upload-page__info-grid {
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
 }
