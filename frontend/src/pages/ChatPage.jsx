@@ -469,6 +469,14 @@ function ChatPage() {
           type="text"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              if (question.trim() && !loading) {
+                handleSubmit(e);
+              }
+            }
+          }}
           placeholder="Type your question here..."
           disabled={loading}
           className="chat-page__input"
