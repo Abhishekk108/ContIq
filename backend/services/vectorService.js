@@ -120,6 +120,40 @@ async function deleteVectorsByFileId(fileId) {
   console.log(`Deleted all vectors for fileId: ${fileId}`);
 }
 
+async function deleteVectorsByFilename(filename) {
+  if (!filename) {
+    throw new Error('filename is required for deletion');
+  }
+
+  await ensureCollection();
+
+  try {
+    // Count points before deletion
+    const scrollBefore = await qdrantClient.scroll(COLLECTION_NAME, {
+      filter: {
+        must: [
+          { key: 'filename', match: { value: filename } }
+        ]
+      },
+      limit: 1,
+      with_payload: false,
+      with_vector: false
+    });
+
+    await qdrantClient.delete(COLLECTION_NAME, {
+      filter: {
+        must: [
+          { key: 'filename', match: { value: filename } }
+        ]
+      }
+    });
+
+    console.log(`Deleted all existing vectors for filename: ${filename}`);
+  } catch (error) {
+    console.log(`No existing vectors found for filename: ${filename} (or deletion failed)`);
+  }
+}
+
 async function clearAllVectors() {
   try {
     // Delete the entire collection
@@ -139,5 +173,6 @@ module.exports = {
   saveVectors,
   searchVectors,
   deleteVectorsByFileId,
+  deleteVectorsByFilename,
   clearAllVectors
 };

@@ -75,7 +75,12 @@ router.post('/', upload.single('pdf'), async (req, res) => {
     const embeddings = await embeddingService.getEmbeddings(chunks);
     console.log(`Generated ${embeddings.length} embeddings`);
 
-    // Step 4: Store vectors with metadata
+    // Step 4: Delete old versions of this file (by filename) before storing new one
+    console.log('Checking for existing versions of this file...');
+    await vectorService.deleteVectorsByFilename(filename);
+    console.log('Old versions deleted (if any)');
+    
+    // Step 5: Store vectors with metadata
     console.log('Storing vectors...');
     const chunksWithMeta = chunks.map((text, i) => ({
       text,
