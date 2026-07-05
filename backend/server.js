@@ -16,10 +16,12 @@ app.use(express.urlencoded({ extended: true }));
 const uploadRoute = require('./routes/upload');
 const queryRoute = require('./routes/query');
 const authRoute = require('./routes/auth');
+const userRoute = require('./routes/user');
 
 app.use('/upload', uploadRoute);
 app.use('/query', queryRoute);
 app.use('/auth', authRoute);
+app.use('/user', userRoute);
 
 // Health check
 app.get('/', (req, res) => {
