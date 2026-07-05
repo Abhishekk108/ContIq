@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const connectDB = require('./config/db');
 const { initEmbedding } = require('./services/embeddingService');
 
 const app = express();
@@ -28,10 +29,13 @@ app.get('/', (req, res) => {
   });
 });
 
-// Initialize embedding model and start server
+// Initialize services and start server
 async function startServer() {
   try {
     console.log('[Server] Starting Contiq Backend...');
+    
+    // Connect to MongoDB
+    await connectDB();
     
     // Initialize local embedding model
     await initEmbedding();
