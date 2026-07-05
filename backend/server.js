@@ -15,9 +15,11 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 const uploadRoute = require('./routes/upload');
 const queryRoute = require('./routes/query');
+const authRoute = require('./routes/auth');
 
 app.use('/upload', uploadRoute);
 app.use('/query', queryRoute);
+app.use('/auth', authRoute);
 
 // Health check
 app.get('/', (req, res) => {
