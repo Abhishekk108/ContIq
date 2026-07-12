@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import api from '../api/axios';
 import './UploadPage.css';
 
 function UploadPage() {
@@ -49,7 +49,7 @@ function UploadPage() {
         const formData = new FormData();
         formData.append('pdf', file);
 
-        const response = await axios.post('http://localhost:5555/upload', formData, {
+        const response = await api.post('/upload', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
           onUploadProgress: (progressEvent) => {
             const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
