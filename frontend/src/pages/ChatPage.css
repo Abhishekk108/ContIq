@@ -288,23 +288,42 @@
 }
 
 /* Send Button */
-.chat-page__button {
-  padding: 12px 28px;
-  font-size: 15px;
-  font-weight: 600;
-  background: #115CF9;
-  color: white;
+.send-btn {
+  width: 46px;
+  height: 46px;
   border: none;
-  border-radius: 10px;
+  border-radius: 50%;
+  background: #115CF9; /* ContIQ Blue */
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.chat-page__button:hover {
-  background: #136AFB;
+  transition: all 0.2s ease;
   box-shadow: 0 4px 12px rgba(17, 92, 249, 0.25);
 }
+
+.send-btn:hover {
+  background: #136AFB;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(17, 92, 249, 0.35);
+}
+
+.send-btn:active {
+  transform: scale(0.95);
+}
+
+.send-btn:disabled {
+  background: #BFD6FF;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.send-btn svg {
+  font-size: 18px;
+}
+
 
 .chat-page__button:disabled {
   background: #E2E8F0;

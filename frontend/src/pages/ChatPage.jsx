@@ -3,7 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import './ChatPage.css';
-import { SendHorizontal } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowUp } from "@fortawesome/free-solid-svg-icons";
 
 function ChatPage() {
   const [question, setQuestion] = useState('');
@@ -506,7 +507,7 @@ function ChatPage() {
           className="chat-page__button send-btn"
           
         >
-    
+        <FontAwesomeIcon icon={faArrowUp} />
         </button>
       </form>
     </div>

@@ -4,6 +4,9 @@
   "description": "Frontend for Contiq RAG System",
   "private": true,
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^7.3.0",
+    "@fortawesome/free-solid-svg-icons": "^7.3.0",
+    "@fortawesome/react-fontawesome": "^3.4.0",
     "axios": "^1.6.0",
     "lucide-react": "0.400.0",
     "react": "^18.2.0",

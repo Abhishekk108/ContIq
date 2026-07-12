@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@qdrant/js-client-rest": "^1.18.0",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "lucide-react": "^1.24.0"
   }
 }
