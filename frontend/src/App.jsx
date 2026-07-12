@@ -41,6 +41,33 @@ function Navbar() {
       {/* Right side — only shown when logged in */}
       {isAuthenticated && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          {/* New Chat button */}
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              padding: '8px 18px',
+              fontSize: '14px',
+              fontWeight: '600',
+              background: '#115CF9',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              fontFamily: 'inherit'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#136AFB';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(17, 92, 249, 0.25)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#115CF9';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            + New Chat
+          </button>
+
           {/* User name */}
           <span style={{ fontSize: '14px', color: '#64748B', fontWeight: '500' }}>
             {user?.name}

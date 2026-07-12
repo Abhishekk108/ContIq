@@ -300,9 +300,6 @@ function ChatPage() {
     }
   };
 
-  const handleNewUpload = () => {
-    navigate('/');
-  };
 
   const suggestedQuestions = [
     "Explain the main concepts covered in this material",
@@ -498,16 +495,12 @@ function ChatPage() {
           disabled={loading}
           className="chat-page__input"
         />
-        <button onClick={handleNewUpload} className="chat-page__upload-button">
-          Upload 
-        </button>
         <button
           type="submit"
           disabled={loading || !question.trim()}
           className="chat-page__button send-btn"
-          
         >
-        <FontAwesomeIcon icon={faArrowUp} />
+          <FontAwesomeIcon icon={faArrowUp} />
         </button>
       </form>
     </div>
