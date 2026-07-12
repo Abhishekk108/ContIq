@@ -4,6 +4,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
 const { v4: uuidv4 } = require('uuid');
+const auth = require('../middleware/auth');
+const Document = require('../models/Document');
 const pdfService = require('../services/pdfService');
 const chunkService = require('../services/chunkService');
 const embeddingService = require('../services/embeddingService');
@@ -33,8 +35,8 @@ const upload = multer({
   }
 });
 
-// POST /upload - Handle PDF upload
-router.post('/', upload.single('pdf'), async (req, res) => {
+// POST /upload - Handle PDF upload (Protected: requires JWT)
+router.post('/', auth, upload.single('pdf'), async (req, res) => {
   let filePath = null;
   
   try {
@@ -97,6 +99,18 @@ router.post('/', upload.single('pdf'), async (req, res) => {
     
     await vectorService.saveVectors(vectors);
     console.log('Vectors saved successfully with metadata');
+
+    // Step 6: Save document record to MongoDB
+    console.log('Saving document record to MongoDB...');
+    await Document.create({
+      user: req.user.id,
+      filename: req.file.filename,        // timestamped name on disk (e.g. 1778063802830.pdf)
+      originalName: filename,             // original name from the user's machine
+      uploadDate: new Date(),
+      qdrantCollection: process.env.QDRANT_COLLECTION,
+      chunkCount: chunks.length
+    });
+    console.log('Document record saved');
 
     // Clean up uploaded file
     await fs.unlink(filePath);
