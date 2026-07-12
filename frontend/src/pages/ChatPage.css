@@ -11,7 +11,7 @@
   background: #F8FAFC;
 }
 
-/* Messages Container - Clean White Box */
+/* Messages Container */
 .chat-page__messages {
   flex: 1;
   border: 1px solid #E2E8F0;
@@ -68,9 +68,9 @@
 }
 
 .chat-page__suggestion-button:hover {
-  background: #EFF6FF;
-  border-color: #2563EB;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+  background: #EAF2FF;
+  border-color: #115CF9;
+  box-shadow: 0 2px 8px rgba(17, 92, 249, 0.12);
 }
 
 /* Message Bubbles */
@@ -108,14 +108,14 @@
   justify-content: flex-start;
 }
 
-/* User Message - Blue Background */
+/* User Message */
 .chat-page__message--user {
-  background: #2563EB;
+  background: #115CF9;
   color: #FFFFFF;
   border-radius: 16px 16px 4px 16px;
 }
 
-/* Assistant Message - Light Gray Background */
+/* Assistant Message */
 .chat-page__message--assistant {
   background: #F8FAFC;
   color: #0F172A;
@@ -187,7 +187,7 @@
   width: 18px;
   height: 18px;
   border: 3px solid #E2E8F0;
-  border-top: 3px solid #7C3AED;
+  border-top: 3px solid #115CF9;
   border-radius: 50%;
   animation: chat-spinner 1s linear infinite;
 }
@@ -197,7 +197,7 @@
   font-size: 14px;
 }
 
-/* File Selector - Purple Accent for Active State */
+/* File Selector chips */
 .chat-page__file-selector {
   display: flex;
   gap: 10px;
@@ -211,7 +211,7 @@
 
 .chat-page__file-button {
   padding: 8px 16px;
-  fontSize: 13px;
+  font-size: 13px;
   border-radius: 20px;
   cursor: pointer;
   white-space: nowrap;
@@ -223,18 +223,18 @@
 }
 
 .chat-page__file-button:hover {
-  background: #F8FAFC;
-  border-color: #7C3AED;
+  background: #EAF2FF;
+  border-color: #115CF9;
 }
 
 .chat-page__file-button--active {
-  background: #7C3AED;
-  border-color: #7C3AED;
+  background: #115CF9;
+  border-color: #115CF9;
   color: #FFFFFF;
   font-weight: 600;
 }
 
-/* Input Form - Clean White Container */
+/* Input Form */
 .chat-page__form {
   display: flex;
   gap: 12px;
@@ -259,16 +259,16 @@
 }
 
 .chat-page__input:focus {
-  border-color: #2563EB;
+  border-color: #115CF9;
   background: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px rgba(17, 92, 249, 0.12);
 }
 
 .chat-page__input::placeholder {
   color: #94A3B8;
 }
 
-/* Upload Button - Success Green */
+/* Upload Button */
 .chat-page__upload-button {
   padding: 12px 20px;
   background: #22C55E;
@@ -287,12 +287,12 @@
   box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25);
 }
 
-/* Send Button - Primary Blue */
+/* Send Button */
 .chat-page__button {
   padding: 12px 28px;
   font-size: 15px;
   font-weight: 600;
-  background: #2563EB;
+  background: #115CF9;
   color: white;
   border: none;
   border-radius: 10px;
@@ -302,8 +302,8 @@
 }
 
 .chat-page__button:hover {
-  background: #1d4ed8;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  background: #136AFB;
+  box-shadow: 0 4px 12px rgba(17, 92, 249, 0.25);
 }
 
 .chat-page__button:disabled {
@@ -313,7 +313,7 @@
   box-shadow: none;
 }
 
-/* Scroll to Bottom Button - Purple Accent */
+/* Scroll to Bottom Button */
 .chat-page__scroll-button {
   position: fixed;
   bottom: 120px;
@@ -322,22 +322,22 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: #7C3AED;
+  background: #115CF9;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.3);
+  box-shadow: 0 4px 16px rgba(17, 92, 249, 0.3);
   transition: all 0.2s;
   z-index: 10;
   color: white;
 }
 
 .chat-page__scroll-button:hover {
-  background: #6d28d9;
+  background: #136AFB;
   transform: translateX(-50%) scale(1.1);
-  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+  box-shadow: 0 6px 20px rgba(17, 92, 249, 0.4);
 }
 
 .chat-page__scroll-button:active {
@@ -348,7 +348,7 @@
 .chat-page__cursor {
   display: inline-block;
   margin-left: 2px;
-  color: #7C3AED;
+  color: #115CF9;
   animation: blink 1s step-end infinite;
   font-weight: 400;
 }
@@ -364,7 +364,7 @@
   51%, 100% { opacity: 0; }
 }
 
-/* Responsive Design */
+/* Responsive */
 @media (max-width: 768px) {
   .chat-page {
     padding: 16px;

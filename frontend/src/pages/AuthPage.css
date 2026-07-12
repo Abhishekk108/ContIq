@@ -97,9 +97,9 @@
 }
 
 .auth-card__input:focus {
-  border-color: #2563EB;
+  border-color: #115CF9;
   background: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px rgba(17, 92, 249, 0.12);
 }
 
 .auth-card__input:disabled {
@@ -122,7 +122,7 @@
   font-size: 15px;
   font-weight: 600;
   font-family: inherit;
-  background: #2563EB;
+  background: #115CF9;
   color: #FFFFFF;
   border: none;
   border-radius: 8px;
@@ -131,8 +131,8 @@
 }
 
 .auth-card__button:hover:not(:disabled) {
-  background: #1d4ed8;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  background: #136AFB;
+  box-shadow: 0 4px 12px rgba(17, 92, 249, 0.25);
 }
 
 .auth-card__button:active:not(:disabled) {
@@ -170,14 +170,14 @@
 }
 
 .auth-card__link {
-  color: #2563EB;
+  color: #115CF9;
   font-weight: 600;
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .auth-card__link:hover {
-  color: #1d4ed8;
+  color: #136AFB;
   text-decoration: underline;
 }
 

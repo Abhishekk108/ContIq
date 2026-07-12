@@ -12,7 +12,7 @@
   margin: 0 auto;
 }
 
-/* Header Section - Clean White Background */
+/* Header Section */
 .upload-page__header {
   text-align: center;
   color: #0F172A;
@@ -38,7 +38,7 @@
   font-weight: 400;
 }
 
-/* Upload Card - Clean White Container */
+/* Upload Card */
 .upload-page__card {
   background: #FFFFFF;
   border-radius: 16px;
@@ -49,7 +49,7 @@
   margin: 0 auto 48px;
 }
 
-/* Dropzone - Minimal Border Style */
+/* Dropzone */
 .upload-page__dropzone {
   border: 2px dashed #E2E8F0;
   border-radius: 12px;
@@ -61,19 +61,19 @@
 }
 
 .upload-page__dropzone:hover {
-  border-color: #2563EB;
-  background: #EFF6FF;
+  border-color: #115CF9;
+  background: #EAF2FF;
 }
 
 .upload-page__dropzone-icon-wrapper {
   margin-bottom: 24px;
 }
 
-/* Upload Button - Solid Blue Primary */
+/* Upload Label Button */
 .upload-page__upload-label {
   display: inline-block;
   padding: 14px 32px;
-  background: #2563EB;
+  background: #115CF9;
   color: white;
   border-radius: 8px;
   cursor: pointer;
@@ -85,8 +85,8 @@
 }
 
 .upload-page__upload-label:hover {
-  background: #1d4ed8;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  background: #136AFB;
+  box-shadow: 0 4px 12px rgba(17, 92, 249, 0.25);
 }
 
 .upload-page__upload-label:active {
@@ -113,7 +113,7 @@
 
 .upload-page__file-icon {
   flex-shrink: 0;
-  color: #7C3AED;
+  color: #115CF9;
 }
 
 .upload-page__file-details {
@@ -134,7 +134,7 @@
   margin-top: 4px;
 }
 
-/* Action Buttons */
+/* Process Button */
 .upload-page__actions {
   display: flex;
   flex-direction: column;
@@ -189,7 +189,7 @@
 }
 
 .upload-page__status--progress {
-  background: #EFF6FF;
+  background: #EAF2FF;
   border: 1px solid #BFDBFE;
 }
 
@@ -210,7 +210,7 @@
 }
 
 .upload-page__status--progress p {
-  color: #2563EB;
+  color: #115CF9;
 }
 
 .upload-page__status--success p {
@@ -221,7 +221,7 @@
   color: #EF4444;
 }
 
-/* Info Cards Section */
+/* Info Cards */
 .upload-page__info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -251,7 +251,7 @@
 .upload-page__info-icon {
   width: 48px;
   height: 48px;
-  background: #7C3AED;
+  background: #115CF9;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -277,7 +277,7 @@
   margin: 0;
 }
 
-/* Guidelines Section */
+/* Guidelines */
 .upload-page__guidelines {
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
@@ -311,7 +311,7 @@
   margin-bottom: 0;
 }
 
-/* Responsive Design */
+/* Responsive */
 @media (max-width: 768px) {
   .upload-page {
     padding: 32px 16px;

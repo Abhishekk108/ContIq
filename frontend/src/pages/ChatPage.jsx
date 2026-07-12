@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import './ChatPage.css';
+import { SendHorizontal } from "lucide-react";
 
 function ChatPage() {
   const [question, setQuestion] = useState('');
@@ -418,7 +419,7 @@ function ChatPage() {
               fontSize: '13px',
               borderRadius: '20px',
               border: '1px solid #E2E8F0',
-              background: selectedFileId === null ? '#7C3AED' : '#FFFFFF',
+              background: selectedFileId === null ? '#115CF9' : '#FFFFFF',
               color: selectedFileId === null ? '#FFFFFF' : '#64748B',
               cursor: 'pointer',
               whiteSpace: 'nowrap',
@@ -427,8 +428,8 @@ function ChatPage() {
             }}
             onMouseEnter={(e) => {
               if (selectedFileId !== null) {
-                e.currentTarget.style.background = '#F8FAFC';
-                e.currentTarget.style.borderColor = '#7C3AED';
+                e.currentTarget.style.background = '#EAF2FF';
+                e.currentTarget.style.borderColor = '#115CF9';
               }
             }}
             onMouseLeave={(e) => {
@@ -449,7 +450,7 @@ function ChatPage() {
                 fontSize: '13px',
                 borderRadius: '20px',
                 border: '1px solid #E2E8F0',
-                background: selectedFileId === file.fileId ? '#7C3AED' : '#FFFFFF',
+                background: selectedFileId === file.fileId ? '#115CF9' : '#FFFFFF',
                 color: selectedFileId === file.fileId ? '#FFFFFF' : '#64748B',
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
@@ -458,8 +459,8 @@ function ChatPage() {
               }}
               onMouseEnter={(e) => {
                 if (selectedFileId !== file.fileId) {
-                  e.currentTarget.style.background = '#F8FAFC';
-                  e.currentTarget.style.borderColor = '#7C3AED';
+                  e.currentTarget.style.background = '#EAF2FF';
+                  e.currentTarget.style.borderColor = '#115CF9';
                 }
               }}
               onMouseLeave={(e) => {
@@ -502,9 +503,10 @@ function ChatPage() {
         <button
           type="submit"
           disabled={loading || !question.trim()}
-          className="chat-page__button"
+          className="chat-page__button send-btn"
+          
         >
-          Send
+    
         </button>
       </form>
     </div>
