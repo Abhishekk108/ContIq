@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import UploadPage from './pages/UploadPage';
@@ -11,11 +11,14 @@ import './App.css';
 function Navbar() {
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     logout();
     navigate('/login', { replace: true });
   };
+
+  const showNewChatButton = isAuthenticated && (location.pathname === '/chat' || location.pathname.startsWith('/chat/'));
 
   return (
     <header style={{
@@ -42,31 +45,33 @@ function Navbar() {
       {isAuthenticated && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {/* New Chat button */}
-          <button
-            onClick={() => navigate('/')}
-            style={{
-              padding: '8px 18px',
-              fontSize: '14px',
-              fontWeight: '600',
-              background: '#115CF9',
-              color: '#FFFFFF',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              fontFamily: 'inherit'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#136AFB';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(17, 92, 249, 0.25)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#115CF9';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-          >
-            + New Chat
-          </button>
+          {showNewChatButton && (
+            <button
+              onClick={() => navigate('/')}
+              style={{
+                padding: '8px 18px',
+                fontSize: '14px',
+                fontWeight: '600',
+                background: '#115CF9',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                fontFamily: 'inherit'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#136AFB';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(17, 92, 249, 0.25)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#115CF9';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              + New Chat
+            </button>
+          )}
 
           {/* User name */}
           <span style={{ fontSize: '14px', color: '#64748B', fontWeight: '500' }}>
