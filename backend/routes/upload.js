@@ -104,8 +104,9 @@ router.post('/', auth, upload.single('pdf'), async (req, res) => {
     console.log('Saving document record to MongoDB...');
     await Document.create({
       user: req.user.id,
-      filename: req.file.filename,        // timestamped name on disk (e.g. 1778063802830.pdf)
-      originalName: filename,             // original name from the user's machine
+      fileId,                                 // Qdrant uuid for this PDF
+      filename: req.file.filename,            // timestamped name on disk (e.g. 1778063802830.pdf)
+      originalName: filename,                 // original name from the user's machine
       uploadDate: new Date(),
       qdrantCollection: process.env.QDRANT_COLLECTION,
       chunkCount: chunks.length

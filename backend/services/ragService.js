@@ -14,27 +14,24 @@ if (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== 'placeholder_key') 
  * Generate answer using RAG pipeline
  * @param {string} query - User question
  * @param {Array} conversationHistory - Previous messages in the conversation
- * @param {string|null} fileId - Optional fileId to filter search to specific PDF
+ * @param {string[]|string|null} fileIds - Array of allowed fileIds (user-scoped) or single fileId
  * @returns {Promise<{answer: string, sources: Array}>}
  */
-async function generateAnswer(query, conversationHistory = [], fileId = null) {
+async function generateAnswer(query, conversationHistory = [], fileIds = null) {
   try {
     if (!groq) {
       throw new Error('Groq API key not configured');
     }
 
     console.log('Starting RAG pipeline for query:', query);
-    if (fileId) {
-      console.log('Filtering by fileId:', fileId);
-    }
 
     // Step 1: Embed the query
     console.log('Embedding query...');
     const queryEmbedding = await embeddingService.getEmbedding(query);
 
-    // Step 2: Search stored vectors in Qdrant
+    // Step 2: Search stored vectors in Qdrant — scoped to user's fileIds
     console.log('Searching stored vectors...');
-    const topChunks = await searchVectors(queryEmbedding, 3, fileId);
+    const topChunks = await searchVectors(queryEmbedding, 3, fileIds);
 
     if (topChunks.length === 0) {
       throw new Error('No documents have been uploaded yet. Please upload a PDF first.');
@@ -158,26 +155,23 @@ Generate a well-structured, Markdown-formatted response following all guidelines
  * @param {string} query - User question
  * @param {object} res - Express response object for streaming
  * @param {Array} conversationHistory - Previous messages in the conversation
- * @param {string|null} fileId - Optional fileId to filter search to specific PDF
+ * @param {string[]|string|null} fileIds - Array of allowed fileIds (user-scoped) or single fileId
  */
-async function streamAnswer(query, res, conversationHistory = [], fileId = null) {
+async function streamAnswer(query, res, conversationHistory = [], fileIds = null) {
   try {
     if (!groq) {
       throw new Error('Groq API key not configured');
     }
 
     console.log('Starting RAG streaming pipeline for query:', query);
-    if (fileId) {
-      console.log('Filtering by fileId:', fileId);
-    }
 
     // Step 1: Embed the query
     console.log('Embedding query...');
     const queryEmbedding = await embeddingService.getEmbedding(query);
 
-    // Step 2: Search stored vectors in Qdrant
+    // Step 2: Search stored vectors in Qdrant — scoped to user's fileIds
     console.log('Searching stored vectors...');
-    const topChunks = await searchVectors(queryEmbedding, 3, fileId);
+    const topChunks = await searchVectors(queryEmbedding, 3, fileIds);
 
     if (topChunks.length === 0) {
       throw new Error('No documents have been uploaded yet. Please upload a PDF first.');

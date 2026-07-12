@@ -11,6 +11,11 @@ const documentSchema = new mongoose.Schema(
       ref: 'User',
       required: [true, 'User reference is required']
     },
+    fileId: {
+      type: String,
+      required: [true, 'Qdrant fileId is required'],
+      trim: true
+    },
     filename: {
       type: String,
       required: [true, 'Filename is required'],
@@ -43,6 +48,9 @@ const documentSchema = new mongoose.Schema(
 
 // Index for fast lookups by user
 documentSchema.index({ user: 1 });
+
+// Index for fast lookups by user + fileId combination
+documentSchema.index({ user: 1, fileId: 1 });
 
 // Index for fast lookups by user + filename combination
 documentSchema.index({ user: 1, filename: 1 });

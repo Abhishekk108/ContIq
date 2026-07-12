@@ -70,7 +70,7 @@ async function saveVectors(chunks) {
   await qdrantClient.upsert(COLLECTION_NAME, { points });
 }
 
-async function searchVectors(queryEmbedding, topK = 3, fileId = null) {
+async function searchVectors(queryEmbedding, topK = 3, fileIds = null) {
   if (!Array.isArray(queryEmbedding) || queryEmbedding.length === 0) {
     throw new Error('searchVectors requires a non-empty queryEmbedding array');
   }
@@ -83,13 +83,26 @@ async function searchVectors(queryEmbedding, topK = 3, fileId = null) {
     with_payload: true
   };
 
-  // Add filter if fileId is provided
-  if (fileId) {
-    searchParams.filter = {
-      must: [
-        { key: 'fileId', match: { value: fileId } }
-      ]
-    };
+  // Build Qdrant filter from the provided fileId(s)
+  if (fileIds !== null) {
+    const ids = Array.isArray(fileIds) ? fileIds : [fileIds];
+
+    if (ids.length === 1) {
+      // Single fileId — exact match filter
+      searchParams.filter = {
+        must: [
+          { key: 'fileId', match: { value: ids[0] } }
+        ]
+      };
+    } else if (ids.length > 1) {
+      // Multiple fileIds — any-of filter (user's full document set)
+      searchParams.filter = {
+        must: [
+          { key: 'fileId', match: { any: ids } }
+        ]
+      };
+    }
+    // ids.length === 0 would mean no allowed docs — caller handles this
   }
 
   const results = await qdrantClient.search(COLLECTION_NAME, searchParams);
