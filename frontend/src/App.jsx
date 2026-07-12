@@ -33,8 +33,8 @@ function Navbar() {
       <Link to={isAuthenticated ? '/' : '/login'} style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
         <img
           src="/logo.png"
-          alt="ContIQ Logo"
-          style={{ height: '48px', width: 'auto', objectFit: 'contain' }}
+          alt="ContIQ Logo" 
+          style={{ height: '78px', width: 'auto', objectFit: 'contain' }}
         />
       </Link>
 
