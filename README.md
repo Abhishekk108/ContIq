@@ -18,11 +18,11 @@ ContIQ is a full-stack **Retrieval-Augmented Generation (RAG)** application that
          (800 chars, 100 overlap)
                     │
                     ▼
-     Xenova/all-MiniLM-L6-v2
-     Local Embedding Model
+         Xenova/all-MiniLM-L6-v2
+         Local Embedding Model
                     │
                     ▼
-        384-D Vector Embeddings
+          384-D Vector Embeddings
                     │
     ────────────────────────────────────
             User Question
