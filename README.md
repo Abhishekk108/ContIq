@@ -24,29 +24,27 @@ ContIQ is a full-stack **Retrieval-Augmented Generation (RAG)** application that
                     ▼
         384-D Vector Embeddings
                     │
-                    ▼
-       Qdrant Cloud Vector Store
-                    │
-────────────────────────────────────
-User Question
-       │
-       ▼
-Generate Query Embedding
-       │
-       ▼
-Cosine Similarity Search
-       │
-       ▼
-Top-K Relevant Chunks
-       │
-       ▼
-Prompt Construction
-       │
-       ▼
-Groq Llama-3.3-70B
-       │
-       ▼
-Grounded Answer + Sources
+    ────────────────────────────────────
+            User Question
+                   │
+                   ▼
+            Generate Query Embedding
+                   │
+                   ▼
+            Cosine Similarity Search
+                   │
+                   ▼
+            Top-K Relevant Chunks
+                   │
+                   ▼
+            Prompt Construction
+                   │
+                   ▼
+            Groq Llama-3.3-70B
+                   │
+                   ▼
+            Grounded Answer + Sources
+
 ```
 
 ---
