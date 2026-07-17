@@ -17,6 +17,7 @@ function ChatPage() {
   const [showScrollButton, setShowScrollButton] = useState(false);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
+  const streamingMessageRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -183,10 +184,6 @@ function ChatPage() {
     );
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -202,6 +199,9 @@ function ChatPage() {
     // Create a placeholder assistant message for streaming
     const assistantMessageIndex = messages.length + 1;
     setMessages(prev => [...prev, { role: 'assistant', content: '', sources: [] }]);
+
+    // Scroll to the new assistant message once it mounts
+    // (handled via ref callback on the message element)
 
     try {
       const token = localStorage.getItem('token');
@@ -297,6 +297,7 @@ function ChatPage() {
     } finally {
       setLoading(false);
       setIsStreaming(false);
+      streamingMessageRef.current = null;
     }
   };
 
@@ -346,6 +347,18 @@ function ChatPage() {
                 : msg.isError
                   ? 'chat-page__message-wrapper--error'
                   : 'chat-page__message-wrapper--assistant'}`}
+              ref={
+                // Attach ref to the last assistant message while streaming;
+                // fires once on mount → scroll to its top, never again
+                msg.role === 'assistant' && isStreaming && idx === messages.length - 1
+                  ? (el) => {
+                      if (el && streamingMessageRef.current !== el) {
+                        streamingMessageRef.current = el;
+                        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }
+                    }
+                  : undefined
+              }
             >
               <div
                 className={`chat-page__message ${msg.role === 'user'
