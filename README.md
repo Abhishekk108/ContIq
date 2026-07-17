@@ -18,35 +18,33 @@ ContIQ is a full-stack **Retrieval-Augmented Generation (RAG)** application that
          (800 chars, 100 overlap)
                     │
                     ▼
-     Xenova/all-MiniLM-L6-v2
-     Local Embedding Model
+         Xenova/all-MiniLM-L6-v2
+         Local Embedding Model
                     │
                     ▼
-        384-D Vector Embeddings
+          384-D Vector Embeddings
                     │
-                    ▼
-       Qdrant Cloud Vector Store
-                    │
-────────────────────────────────────
-User Question
-       │
-       ▼
-Generate Query Embedding
-       │
-       ▼
-Cosine Similarity Search
-       │
-       ▼
-Top-K Relevant Chunks
-       │
-       ▼
-Prompt Construction
-       │
-       ▼
-Groq Llama-3.3-70B
-       │
-       ▼
-Grounded Answer + Sources
+    ────────────────────────────────────
+            User Question
+                   │
+                   ▼
+            Generate Query Embedding
+                   │
+                   ▼
+            Cosine Similarity Search
+                   │
+                   ▼
+            Top-K Relevant Chunks
+                   │
+                   ▼
+            Prompt Construction
+                   │
+                   ▼
+            Groq Llama-3.3-70B
+                   │
+                   ▼
+            Grounded Answer + Sources
+
 ```
 
 ---
