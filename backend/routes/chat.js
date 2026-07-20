@@ -5,6 +5,7 @@ const {
   createChat,
   getChats,
   getChatById,
+  renameChat,
   deleteChat
 } = require('../controllers/chatController');
 
@@ -32,5 +33,10 @@ router.get('/:id', auth, getChatById);
 // @desc    Delete chat and associated messages
 // @access  Private
 router.delete('/:id', auth, deleteChat);
+
+// @route   PATCH /chat/:id
+// @desc    Rename chat title
+// @access  Private
+router.patch('/:id', auth, renameChat);
 
 module.exports = router;

@@ -26,6 +26,11 @@ function ChatPage() {
   // Confirmation modal state
   const [confirmDelete, setConfirmDelete] = useState(null); // { id, title } | null
 
+  // Inline rename state
+  const [editingChatId, setEditingChatId] = useState(null);  // which item is being edited
+  const [editingTitle, setEditingTitle] = useState('');       // current input value
+  const editInputRef = useRef(null);
+
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const streamingMessageRef = useRef(null);
@@ -97,6 +102,42 @@ function ChatPage() {
     } finally {
       setDeletingChatId(null);
     }
+  };
+
+  // ─── Sidebar: start renaming ───────────────────────────────────────────────
+  const handleStartRename = (e, chatId, currentTitle) => {
+    e.stopPropagation();
+    setEditingChatId(chatId);
+    setEditingTitle(currentTitle);
+    // Focus the input on next paint
+    setTimeout(() => editInputRef.current?.focus(), 0);
+  };
+
+  // ─── Sidebar: commit rename ────────────────────────────────────────────────
+  const handleCommitRename = async (chatId) => {
+    const trimmed = editingTitle.trim();
+    setEditingChatId(null);
+
+    if (!trimmed) return; // empty — revert silently
+
+    // Optimistic update
+    setChats(prev =>
+      prev.map(c => c._id === chatId ? { ...c, title: trimmed } : c)
+    );
+
+    try {
+      await api.patch(`/chat/${chatId}`, { title: trimmed });
+    } catch (err) {
+      console.error('Failed to rename chat:', err);
+      // Roll back on failure
+      fetchChats();
+    }
+  };
+
+  // ─── Sidebar: cancel rename ────────────────────────────────────────────────
+  const handleCancelRename = () => {
+    setEditingChatId(null);
+    setEditingTitle('');
   };
 
   // ─── Handle uploaded file from navigation state ────────────────────────────

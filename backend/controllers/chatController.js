@@ -115,6 +115,65 @@ const getChatById = async (req, res) => {
 };
 
 /**
+ * @desc    Update chat title
+ * @route   PATCH /chat/:id
+ * @access  Private
+ */
+const renameChat = async (req, res) => {
+  try {
+    const { title } = req.body;
+
+    if (!title || !title.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Title is required'
+      });
+    }
+
+    const chat = await Chat.findById(req.params.id);
+
+    if (!chat) {
+      return res.status(404).json({
+        success: false,
+        message: 'Chat not found'
+      });
+    }
+
+    // Verify ownership
+    if (chat.user.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. You do not own this chat'
+      });
+    }
+
+    chat.title = title.trim();
+    await chat.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Chat renamed successfully',
+      chat
+    });
+
+  } catch (error) {
+    console.error('Rename chat error:', error);
+
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid chat ID'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Server error while renaming chat'
+    });
+  }
+};
+
+/**
  * @desc    Delete a chat and all associated messages
  * @route   DELETE /chat/:id
  * @access  Private
@@ -171,5 +230,6 @@ module.exports = {
   createChat,
   getChats,
   getChatById,
+  renameChat,
   deleteChat
 };
