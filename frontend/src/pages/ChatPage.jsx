@@ -23,6 +23,9 @@ function ChatPage() {
   const [sidebarLoading, setSidebarLoading] = useState(false);
   const [deletingChatId, setDeletingChatId] = useState(null);
 
+  // Confirmation modal state
+  const [confirmDelete, setConfirmDelete] = useState(null); // { id, title } | null
+
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const streamingMessageRef = useRef(null);
@@ -73,8 +76,14 @@ function ChatPage() {
   };
 
   // ─── Sidebar: delete a chat ────────────────────────────────────────────────
-  const handleDeleteChat = async (e, chatId) => {
+  const handleDeleteChat = (e, chatId, chatTitle) => {
     e.stopPropagation(); // don't trigger handleSelectChat
+    setConfirmDelete({ id: chatId, title: chatTitle });
+  };
+
+  const confirmAndDelete = async () => {
+    const chatId = confirmDelete.id;
+    setConfirmDelete(null);
     setDeletingChatId(chatId);
     try {
       await api.delete(`/chat/${chatId}`);
@@ -367,7 +376,7 @@ function ChatPage() {
                 <span className="chat-sidebar__item-title">{chat.title}</span>
                 <button
                   className="chat-sidebar__delete-btn"
-                  onClick={(e) => handleDeleteChat(e, chat._id)}
+                  onClick={(e) => handleDeleteChat(e, chat._id, chat.title)}
                   disabled={deletingChatId === chat._id}
                   title="Delete chat"
                   aria-label="Delete chat"
@@ -543,6 +552,41 @@ function ChatPage() {
           </button>
         </form>
       </div>
+
+      {/* ── Confirmation Modal ───────────────────────────────────────────────── */}
+      {confirmDelete && (
+        <div className="chat-modal__overlay" onClick={() => setConfirmDelete(null)}>
+          <div className="chat-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <div className="chat-modal__icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                <path d="M10 11v6"></path>
+                <path d="M14 11v6"></path>
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+              </svg>
+            </div>
+            <h2 className="chat-modal__title" id="modal-title">Delete chat?</h2>
+            <p className="chat-modal__body">
+              "<strong>{confirmDelete.title}</strong>" and all its messages will be permanently deleted.
+            </p>
+            <div className="chat-modal__actions">
+              <button
+                className="chat-modal__btn chat-modal__btn--cancel"
+                onClick={() => setConfirmDelete(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="chat-modal__btn chat-modal__btn--delete"
+                onClick={confirmAndDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
