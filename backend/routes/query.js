@@ -47,6 +47,9 @@ router.post('/', auth, async (req, res) => {
         role: 'user',
         content: question.trim()
       });
+
+      // Auto-title the chat on its first message
+      await autoTitleChat(chatId, question);
     }
 
     // Execute full RAG pipeline with user-scoped fileIds
@@ -117,6 +120,9 @@ router.post('/stream', auth, async (req, res) => {
         role: 'user',
         content: question.trim()
       });
+
+      // Auto-title the chat on its first message
+      await autoTitleChat(chatId, question);
     }
 
     // Execute RAG pipeline with streaming and user-scoped fileIds
@@ -173,6 +179,34 @@ async function getUserFileIds(userId, requestedFileId) {
   // No specific file selected — search across all of the user's documents
   const docs = await Document.find({ user: userId }).select('fileId');
   return docs.map(d => d.fileId);
+}
+
+/**
+ * Auto-title a chat using the first user question.
+ * Only updates when the title is still the default "New Chat" and
+ * the message we just saved is the very first one in the chat.
+ *
+ * @param {string} chatId   - MongoDB _id of the Chat document
+ * @param {string} question - Raw question text from the request
+ */
+async function autoTitleChat(chatId, question) {
+  try {
+    const chat = await Chat.findById(chatId).select('title');
+    if (!chat || chat.title !== 'New Chat') return;
+
+    // Only rename on the first message (the one we just inserted = count of 1)
+    const messageCount = await Message.countDocuments({ chat: chatId, role: 'user' });
+    if (messageCount !== 1) return;
+
+    // Trim to ~50 characters on a word boundary where possible
+    const raw = question.trim();
+    let title = raw.length <= 50 ? raw : raw.substring(0, 50).replace(/\s+\S*$/, '').trim() + '…';
+
+    await Chat.findByIdAndUpdate(chatId, { title });
+  } catch (err) {
+    // Non-critical — log and continue without failing the request
+    console.error('Auto-title chat error:', err.message);
+  }
 }
 
 module.exports = router;
