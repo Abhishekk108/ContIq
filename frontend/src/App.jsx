@@ -18,7 +18,7 @@ function Navbar() {
     navigate('/login', { replace: true });
   };
 
-  const showNewChatButton = isAuthenticated && (location.pathname === '/chat' || location.pathname.startsWith('/chat/'));
+  const showNewChatButton = false; // Sidebar handles new chat creation
 
   return (
     <header style={{
