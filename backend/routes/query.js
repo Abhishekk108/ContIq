@@ -3,17 +3,30 @@ const router = express.Router();
 const { generateAnswer, streamAnswer } = require('../services/ragService');
 const auth = require('../middleware/auth');
 const Document = require('../models/Document');
+const Chat = require('../models/Chat');
+const Message = require('../models/Message');
 
 // POST /query - Handle user questions
 router.post('/', auth, async (req, res) => {
   try {
-    const { question, conversationHistory = [], fileId = null } = req.body;
+    const { question, conversationHistory = [], fileId = null, chatId = null } = req.body;
     
     if (!question || question.trim().length === 0) {
       return res.status(400).json({ error: 'Question is required' });
     }
 
     console.log('Received question:', question);
+
+    // Verify chat ownership when chatId is provided
+    if (chatId) {
+      const chat = await Chat.findById(chatId);
+      if (!chat) {
+        return res.status(404).json({ error: 'Chat not found', status: 'failed' });
+      }
+      if (chat.user.toString() !== req.user.id) {
+        return res.status(403).json({ error: 'Access denied. You do not own this chat', status: 'failed' });
+      }
+    }
 
     // Resolve the set of fileIds this user is allowed to search
     const allowedFileIds = await getUserFileIds(req.user.id, fileId);
@@ -27,8 +40,27 @@ router.post('/', auth, async (req, res) => {
 
     console.log(`Searching across ${allowedFileIds.length} document(s) for user ${req.user.id}`);
 
+    // Save user message before generating answer
+    if (chatId) {
+      await Message.create({
+        chat: chatId,
+        role: 'user',
+        content: question.trim()
+      });
+    }
+
     // Execute full RAG pipeline with user-scoped fileIds
     const result = await generateAnswer(question, conversationHistory, allowedFileIds);
+
+    // Save assistant response after generation
+    if (chatId) {
+      await Message.create({
+        chat: chatId,
+        role: 'assistant',
+        content: result.answer,
+        sources: result.sources
+      });
+    }
 
     res.json({
       answer: result.answer,
@@ -47,13 +79,24 @@ router.post('/', auth, async (req, res) => {
 // POST /query/stream - Handle user questions with streaming response
 router.post('/stream', auth, async (req, res) => {
   try {
-    const { question, conversationHistory = [], fileId = null } = req.body;
+    const { question, conversationHistory = [], fileId = null, chatId = null } = req.body;
     
     if (!question || question.trim().length === 0) {
       return res.status(400).json({ error: 'Question is required' });
     }
 
     console.log('Received streaming question:', question);
+
+    // Verify chat ownership when chatId is provided
+    if (chatId) {
+      const chat = await Chat.findById(chatId);
+      if (!chat) {
+        return res.status(404).json({ error: 'Chat not found', status: 'failed' });
+      }
+      if (chat.user.toString() !== req.user.id) {
+        return res.status(403).json({ error: 'Access denied. You do not own this chat', status: 'failed' });
+      }
+    }
 
     // Resolve the set of fileIds this user is allowed to search
     const allowedFileIds = await getUserFileIds(req.user.id, fileId);
@@ -67,9 +110,29 @@ router.post('/stream', auth, async (req, res) => {
 
     console.log(`Streaming across ${allowedFileIds.length} document(s) for user ${req.user.id}`);
 
+    // Save user message before streaming begins
+    if (chatId) {
+      await Message.create({
+        chat: chatId,
+        role: 'user',
+        content: question.trim()
+      });
+    }
+
     // Execute RAG pipeline with streaming and user-scoped fileIds
-    await streamAnswer(question, res, conversationHistory, allowedFileIds);
-    
+    // streamAnswer returns { answer, sources } after the stream closes
+    const result = await streamAnswer(question, res, conversationHistory, allowedFileIds);
+
+    // Save assistant response after streaming completes
+    if (chatId && result) {
+      await Message.create({
+        chat: chatId,
+        role: 'assistant',
+        content: result.answer,
+        sources: result.sources
+      });
+    }
+
   } catch (error) {
     console.error('Streaming query error:', error);
     

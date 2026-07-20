@@ -276,9 +276,11 @@ Generate a well-structured, Markdown-formatted response following all guidelines
     });
 
     // Step 6: Loop through the stream and pipe each token
+    let fullAnswer = '';
     for await (const chunk of stream) {
       const token = chunk.choices[0]?.delta?.content || '';
       if (token) {
+        fullAnswer += token;
         res.write(`data: ${JSON.stringify({ token })}\n\n`);
       }
     }
@@ -295,6 +297,9 @@ Generate a well-structured, Markdown-formatted response following all guidelines
     res.end();
 
     console.log('RAG streaming pipeline completed successfully');
+
+    // Return accumulated answer and sources so callers can persist them
+    return { answer: fullAnswer, sources };
 
   } catch (error) {
     console.error('RAG streaming error:', error);
