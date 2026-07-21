@@ -136,30 +136,58 @@
   min-width: 0;
 }
 
-.chat-sidebar__delete-btn {
+/* Action button group (edit + delete) */
+.chat-sidebar__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.chat-sidebar__item:hover .chat-sidebar__actions {
+  opacity: 1;
+}
+
+.chat-sidebar__action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   background: none;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   color: #94A3B8;
-  opacity: 0;
   transition: all 0.15s;
   padding: 0;
 }
 
-.chat-sidebar__item:hover .chat-sidebar__delete-btn {
-  opacity: 1;
+.chat-sidebar__action-btn:hover {
+  background: #E2E8F0;
+  color: #475569;
 }
 
-.chat-sidebar__delete-btn:hover {
+.chat-sidebar__action-btn--delete:hover {
   background: #FEE2E2;
   color: #EF4444;
+}
+
+/* Inline rename input */
+.chat-sidebar__rename-input {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 6px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #0F172A;
+  background: #FFFFFF;
+  border: 1px solid #115CF9;
+  border-radius: 4px;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(17, 92, 249, 0.15);
 }
 
 .chat-sidebar__delete-spinner {

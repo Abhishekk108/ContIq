@@ -408,32 +408,68 @@ function ChatPage() {
               <div
                 key={chat._id}
                 className={`chat-sidebar__item ${activeChatId === chat._id ? 'chat-sidebar__item--active' : ''}`}
-                onClick={() => handleSelectChat(chat._id)}
-                title={chat.title}
+                onClick={() => editingChatId !== chat._id && handleSelectChat(chat._id)}
+                title={editingChatId === chat._id ? undefined : chat.title}
               >
                 <svg className="chat-sidebar__chat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
-                <span className="chat-sidebar__item-title">{chat.title}</span>
-                <button
-                  className="chat-sidebar__delete-btn"
-                  onClick={(e) => handleDeleteChat(e, chat._id, chat.title)}
-                  disabled={deletingChatId === chat._id}
-                  title="Delete chat"
-                  aria-label="Delete chat"
-                >
-                  {deletingChatId === chat._id ? (
-                    <div className="chat-sidebar__delete-spinner" />
-                  ) : (
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="3 6 5 6 21 6"></polyline>
-                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                      <path d="M10 11v6"></path>
-                      <path d="M14 11v6"></path>
-                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
-                    </svg>
-                  )}
-                </button>
+
+                {editingChatId === chat._id ? (
+                  /* ── Inline rename input ── */
+                  <input
+                    ref={editInputRef}
+                    className="chat-sidebar__rename-input"
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    onBlur={() => handleCommitRename(chat._id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') { e.preventDefault(); handleCommitRename(chat._id); }
+                      if (e.key === 'Escape') { e.preventDefault(); handleCancelRename(); }
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    maxLength={80}
+                    aria-label="Rename chat"
+                  />
+                ) : (
+                  <span className="chat-sidebar__item-title">{chat.title}</span>
+                )}
+
+                {/* Action buttons — hidden while rename input is open */}
+                {editingChatId !== chat._id && (
+                  <div className="chat-sidebar__actions">
+                    <button
+                      className="chat-sidebar__action-btn"
+                      onClick={(e) => handleStartRename(e, chat._id, chat.title)}
+                      title="Rename chat"
+                      aria-label="Rename chat"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </button>
+                    <button
+                      className="chat-sidebar__action-btn chat-sidebar__action-btn--delete"
+                      onClick={(e) => handleDeleteChat(e, chat._id, chat.title)}
+                      disabled={deletingChatId === chat._id}
+                      title="Delete chat"
+                      aria-label="Delete chat"
+                    >
+                      {deletingChatId === chat._id ? (
+                        <div className="chat-sidebar__delete-spinner" />
+                      ) : (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                          <path d="M10 11v6"></path>
+                          <path d="M14 11v6"></path>
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
             ))
           )}
