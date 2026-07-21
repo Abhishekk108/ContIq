@@ -95,6 +95,16 @@ async function generateAnswer(query, conversationHistory = [], fileIds = null) {
       throw new Error('No documents have been uploaded yet. Please upload a PDF first.');
     }
 
+    // Reject low-confidence retrievals — don't let the LLM hallucinate
+    // using irrelevant chunks when nothing in the document matches the query.
+    const SIMILARITY_THRESHOLD = 0.65;
+    if (topChunks[0].score < SIMILARITY_THRESHOLD) {
+      return {
+        answer: "I couldn't find information related to your question in the uploaded document.",
+        sources: []
+      };
+    }
+
     // Step 3: Build document context block
     const context = topChunks.map(chunk => chunk.text).join('\n\n---\n\n');
 
@@ -164,6 +174,22 @@ async function streamAnswer(query, res, conversationHistory = [], fileIds = null
 
     if (topChunks.length === 0) {
       throw new Error('No documents have been uploaded yet. Please upload a PDF first.');
+    }
+
+    // Reject low-confidence retrievals — don't let the LLM hallucinate
+    // using irrelevant chunks when nothing in the document matches the query.
+    const SIMILARITY_THRESHOLD = 0.65;
+    if (topChunks[0].score < SIMILARITY_THRESHOLD) {
+      // SSE headers may not be set yet — send as a normal done event
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.flushHeaders();
+      const msg = "I couldn't find information related to your question in the uploaded document.";
+      res.write(`data: ${JSON.stringify({ token: msg })}\n\n`);
+      res.write(`data: ${JSON.stringify({ sources: [], done: true })}\n\n`);
+      res.end();
+      return { answer: msg, sources: [] };
     }
 
     // Step 3: Build document context block
