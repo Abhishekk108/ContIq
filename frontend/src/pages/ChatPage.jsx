@@ -21,7 +21,9 @@ function ChatPage() {
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
   const [sidebarLoading, setSidebarLoading] = useState(false);
+  const [loadingChatId, setLoadingChatId] = useState(null); // chat being fetched
   const [deletingChatId, setDeletingChatId] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);    // mobile toggle
 
   // Confirmation modal state
   const [confirmDelete, setConfirmDelete] = useState(null); // { id, title } | null
@@ -70,13 +72,20 @@ function ChatPage() {
   // ─── Sidebar: load a chat's messages ──────────────────────────────────────
   const handleSelectChat = async (chatId) => {
     if (chatId === activeChatId) return;
+    // Optimistic: highlight immediately, show skeleton
     setActiveChatId(chatId);
+    setLoadingChatId(chatId);
     setMessages([]);
+    setSidebarOpen(false); // close on mobile after selection
     try {
       const { data } = await api.get(`/chat/${chatId}`);
       setMessages(data.messages || []);
+      // Scroll to bottom of loaded history
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
     } catch (err) {
       console.error('Failed to load chat messages:', err);
+    } finally {
+      setLoadingChatId(null);
     }
   };
 
@@ -380,8 +389,27 @@ function ChatPage() {
   return (
     <div className="chat-layout">
 
+      {/* ── Mobile sidebar toggle ────────────────────────────────────────────── */}
+      <button
+        className="chat-sidebar__mobile-toggle"
+        onClick={() => setSidebarOpen(o => !o)}
+        aria-label="Toggle chat history"
+        title="Chat history"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+
+      {/* ── Mobile overlay ───────────────────────────────────────────────────── */}
+      {sidebarOpen && (
+        <div className="chat-sidebar__overlay" onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* ── Sidebar ─────────────────────────────────────────────────────────── */}
-      <aside className="chat-sidebar">
+      <aside className={`chat-sidebar ${sidebarOpen ? 'chat-sidebar--open' : ''}`}>
         <div className="chat-sidebar__header">
           <button
             className="chat-sidebar__new-btn"
@@ -402,7 +430,13 @@ function ChatPage() {
               <div className="chat-sidebar__spinner" />
             </div>
           ) : chats.length === 0 ? (
-            <p className="chat-sidebar__empty">No chats yet</p>
+            <div className="chat-sidebar__empty-state">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <p>No chats yet</p>
+              <span>Click "New Chat" to start</span>
+            </div>
           ) : (
             chats.map(chat => (
               <div
@@ -483,7 +517,19 @@ function ChatPage() {
           ref={messagesContainerRef}
           onScroll={handleScroll}
         >
-          {messages.length === 0 ? (
+          {loadingChatId ? (
+            /* ── Skeleton while loading chat history ── */
+            <div className="chat-page__skeleton">
+              {[80, 55, 90, 60, 75].map((w, i) => (
+                <div
+                  key={i}
+                  className={`chat-page__skeleton-row ${i % 2 === 0 ? 'chat-page__skeleton-row--left' : 'chat-page__skeleton-row--right'}`}
+                >
+                  <div className="chat-page__skeleton-bubble" style={{ width: `${w}%` }} />
+                </div>
+              ))}
+            </div>
+          ) : messages.length === 0 ? (
             <div>
               <p className="chat-page__empty-state">Start asking questions about your uploaded PDF</p>
               <div className="chat-page__suggestions">
@@ -555,8 +601,10 @@ function ChatPage() {
           )}
           {loading && !isStreaming && (
             <div className="chat-page__loading">
-              <div className="chat-page__loading-indicator" />
-              <span className="chat-page__loading-text">Generating response...</span>
+              <div className="chat-page__loading-dots">
+                <span /><span /><span />
+              </div>
+              <span className="chat-page__loading-text">Thinking…</span>
             </div>
           )}
           <div ref={messagesEndRef} />
