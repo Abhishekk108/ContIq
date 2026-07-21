@@ -40,6 +40,19 @@ router.post('/', auth, async (req, res) => {
 
     console.log(`Searching across ${allowedFileIds.length} document(s) for user ${req.user.id}`);
 
+    // Fetch the last 10 messages from DB as authoritative history when chatId is known.
+    // This avoids relying on the client to send accurate history and handles
+    // page-reload resumption automatically.
+    let history = conversationHistory;
+    if (chatId) {
+      const dbMessages = await Message.find({ chat: chatId })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .select('role content');
+      // Reverse so they're chronological (oldest → newest)
+      history = dbMessages.reverse();
+    }
+
     // Save user message before generating answer
     if (chatId) {
       await Message.create({
@@ -53,7 +66,7 @@ router.post('/', auth, async (req, res) => {
     }
 
     // Execute full RAG pipeline with user-scoped fileIds
-    const result = await generateAnswer(question, conversationHistory, allowedFileIds);
+    const result = await generateAnswer(question, history, allowedFileIds);
 
     // Save assistant response after generation
     if (chatId) {
@@ -113,6 +126,16 @@ router.post('/stream', auth, async (req, res) => {
 
     console.log(`Streaming across ${allowedFileIds.length} document(s) for user ${req.user.id}`);
 
+    // Fetch the last 10 messages from DB as authoritative history when chatId is known
+    let history = conversationHistory;
+    if (chatId) {
+      const dbMessages = await Message.find({ chat: chatId })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .select('role content');
+      history = dbMessages.reverse();
+    }
+
     // Save user message before streaming begins
     if (chatId) {
       await Message.create({
@@ -127,7 +150,7 @@ router.post('/stream', auth, async (req, res) => {
 
     // Execute RAG pipeline with streaming and user-scoped fileIds
     // streamAnswer returns { answer, sources } after the stream closes
-    const result = await streamAnswer(question, res, conversationHistory, allowedFileIds);
+    const result = await streamAnswer(question, res, history, allowedFileIds);
 
     // Save assistant response after streaming completes
     if (chatId && result) {

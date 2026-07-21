@@ -11,9 +11,67 @@ if (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== 'placeholder_key') 
 }
 
 /**
+ * Build the system prompt that frames every conversation turn.
+ * The retrieved document context is injected here so it's available
+ * across all turns without repeating it in user messages.
+ *
+ * @param {string} context - Concatenated text of top retrieved chunks
+ * @returns {string} System prompt string
+ */
+function buildSystemPrompt(context) {
+  return `You are ContIQ, an AI placement assistant designed to help students prepare for technical interviews.
+
+## Identity
+**ContIQ** = Context + IQ — an intelligent document-based Q&A system that helps students master technical concepts from their uploaded study materials.
+
+## Conversation Behaviour
+- You are in a multi-turn conversation. Use prior messages to understand follow-up questions.
+- Questions like "Explain that in simpler terms", "Give an example", or "What did you mean by X?" refer to your previous answer — answer them in that context.
+- Never ask the user to repeat themselves.
+
+## Response Formatting
+- Always use **Markdown** formatting for professional, structured responses.
+- Use ## and ### headings, **bold** for key terms, bullet/numbered lists, tables, and \`code blocks\`.
+- End every response with a "## 📌 Quick Summary" section (2–3 key takeaways).
+
+## Content Rules
+- Use **ONLY** the document context below — never use outside knowledge.
+- If the answer is not in the context, clearly state: "I cannot find this information in the uploaded material."
+- Summarize and paraphrase context — do not copy chunks verbatim.
+- Keep responses concise, accurate, and placement-focused.
+
+## Tone
+Professional, encouraging, technical but clear, focused on placement success.
+
+---
+
+## Retrieved Document Context
+${context}`;
+}
+
+/**
+ * Build a Groq multi-turn messages array from conversation history.
+ * Keeps the last `limit` exchanges (user+assistant pairs) to stay within
+ * token budgets while preserving enough context for follow-up questions.
+ *
+ * @param {Array}  history - Array of { role, content } message objects
+ * @param {number} limit   - Max number of individual messages to include
+ * @returns {Array} Groq-compatible messages array (without system or final user msg)
+ */
+function buildHistoryMessages(history, limit = 10) {
+  if (!history || history.length === 0) return [];
+  // Take the most recent `limit` messages, exclude the current question
+  // (caller appends it as the final user turn)
+  return history
+    .slice(-limit)
+    .filter(m => m.role === 'user' || m.role === 'assistant')
+    .map(m => ({ role: m.role, content: m.content }));
+}
+
+/**
  * Generate answer using RAG pipeline
  * @param {string} query - User question
- * @param {Array} conversationHistory - Previous messages in the conversation
+ * @param {Array}  conversationHistory - Previous messages ({ role, content }[])
  * @param {string[]|string|null} fileIds - Array of allowed fileIds (user-scoped) or single fileId
  * @returns {Promise<{answer: string, sources: Array}>}
  */
@@ -36,101 +94,34 @@ async function generateAnswer(query, conversationHistory = [], fileIds = null) {
     if (topChunks.length === 0) {
       throw new Error('No documents have been uploaded yet. Please upload a PDF first.');
     }
-    
-    // Step 4: Build prompt with context and conversation history
+
+    // Step 3: Build document context block
     const context = topChunks.map(chunk => chunk.text).join('\n\n---\n\n');
-    
-    // Build conversation history string from previous messages
-    let conversationContext = '';
-    if (conversationHistory && conversationHistory.length > 0) {
-      conversationContext = '\n\nPrevious conversation:\n';
-      conversationHistory.forEach(msg => {
-        if (msg.role === 'user') {
-          conversationContext += `User: ${msg.content}\n`;
-        } else if (msg.role === 'assistant') {
-          conversationContext += `Assistant: ${msg.content}\n`;
-        }
-      });
-      conversationContext += '\n---\n';
-    }
-    
-    const prompt = `You are ContIQ, an AI placement assistant designed to help students prepare for technical interviews.
 
-# Your Identity
-**ContIQ** = Context + IQ — an intelligent document-based Q&A system that helps students master technical concepts from their uploaded study materials.
+    // Step 4: System prompt — contains identity, rules, and retrieved document context
+    const systemPrompt = buildSystemPrompt(context);
 
-# Core Guidelines
+    // Step 5: Build multi-turn messages array
+    //   [system] → [...history turns] → [current user question]
+    const historyMessages = buildHistoryMessages(conversationHistory);
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...historyMessages,
+      { role: 'user', content: query }
+    ];
 
-## Response Formatting (CRITICAL)
-- **Always use Markdown formatting** for professional, structured responses
-- Use ## and ### for section headings
-- **Bold important concepts, keywords, and definitions**
-- Use bullet points for lists (avoid long paragraphs)
-- Use numbered lists for steps, algorithms, and processes
-- Use tables for comparisons, complexities, or side-by-side explanations
-- Use \`code blocks\` for code examples, syntax, or commands
-- **End every response with a "## 📌 Quick Summary" section** (2-3 key takeaways)
-
-## Content Rules
-- Use **ONLY** the provided document context — never use outside knowledge
-- If the answer isn't in the context, clearly state: "I cannot find this information in the uploaded material."
-- Summarize and paraphrase context — don't copy chunks verbatim
-- Keep responses concise, accurate, and placement-focused
-- Break complex topics into digestible sections
-- Provide examples when possible
-
-## Response Structure
-For concept explanations:
-1. Start with a brief definition (1-2 sentences)
-2. Break down into subsections with headings
-3. Use bullet points for key characteristics
-4. Provide examples or use cases
-5. End with Quick Summary
-
-For interview questions:
-1. Use numbered lists for questions
-2. Provide hints or expected concepts for each
-3. Categorize by difficulty if possible
-
-## Tone
-- Professional yet approachable
-- Encouraging and supportive
-- Technical but clear
-- Focused on placement preparation success
-
----
-
-# Document Context (Retrieved from uploaded material)
-${context}
-${conversationContext}
-
----
-
-# User Question
-${query}
-
----
-
-# Your Response
-Generate a well-structured, Markdown-formatted response following all guidelines above.`;
-
-    // Step 5: Call Groq LLM with latest model
-    console.log('Calling Groq LLM...');
+    // Step 6: Call Groq LLM
+    console.log(`Calling Groq LLM with ${historyMessages.length} history turns...`);
     const response = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile", // Latest Groq model
-      messages: [
-        {
-          role: "user",
-          content: prompt
-        }
-      ],
+      model: 'llama-3.3-70b-versatile',
+      messages,
       temperature: 0.1,
       max_tokens: 1024
     });
 
     const answer = response.choices[0]?.message?.content || 'No answer generated';
 
-    // Step 6: Return answer and sources
+    // Step 7: Return answer and sources
     const sources = topChunks.map(chunk => ({
       text: chunk.text.substring(0, 200) + (chunk.text.length > 200 ? '...' : ''),
       score: chunk.score,
@@ -139,11 +130,8 @@ Generate a well-structured, Markdown-formatted response following all guidelines
     }));
 
     console.log('RAG pipeline completed successfully');
+    return { answer, sources };
 
-    return {
-      answer,
-      sources
-    };
   } catch (error) {
     console.error('RAG generation error:', error);
     throw new Error(`RAG generation failed: ${error.message}`);
@@ -153,9 +141,10 @@ Generate a well-structured, Markdown-formatted response following all guidelines
 /**
  * Stream answer using RAG pipeline with SSE (Server-Sent Events)
  * @param {string} query - User question
- * @param {object} res - Express response object for streaming
- * @param {Array} conversationHistory - Previous messages in the conversation
+ * @param {object} res   - Express response object for streaming
+ * @param {Array}  conversationHistory - Previous messages ({ role, content }[])
  * @param {string[]|string|null} fileIds - Array of allowed fileIds (user-scoped) or single fileId
+ * @returns {Promise<{answer: string, sources: Array}>}
  */
 async function streamAnswer(query, res, conversationHistory = [], fileIds = null) {
   try {
@@ -176,106 +165,37 @@ async function streamAnswer(query, res, conversationHistory = [], fileIds = null
     if (topChunks.length === 0) {
       throw new Error('No documents have been uploaded yet. Please upload a PDF first.');
     }
-    
-    // Step 3: Build prompt with context and conversation history
+
+    // Step 3: Build document context block
     const context = topChunks.map(chunk => chunk.text).join('\n\n---\n\n');
-    
-    let conversationContext = '';
-    if (conversationHistory && conversationHistory.length > 0) {
-      conversationContext = '\n\nPrevious conversation:\n';
-      conversationHistory.forEach(msg => {
-        if (msg.role === 'user') {
-          conversationContext += `User: ${msg.content}\n`;
-        } else if (msg.role === 'assistant') {
-          conversationContext += `Assistant: ${msg.content}\n`;
-        }
-      });
-      conversationContext += '\n---\n';
-    }
-    
-    const prompt = `You are ContIQ, an AI placement assistant designed to help students prepare for technical interviews.
 
-# Your Identity
-**ContIQ** = Context + IQ — an intelligent document-based Q&A system that helps students master technical concepts from their uploaded study materials.
+    // Step 4: System prompt + multi-turn messages array
+    const systemPrompt = buildSystemPrompt(context);
+    const historyMessages = buildHistoryMessages(conversationHistory);
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...historyMessages,
+      { role: 'user', content: query }
+    ];
 
-# Core Guidelines
-
-## Response Formatting (CRITICAL)
-- **Always use Markdown formatting** for professional, structured responses
-- Use ## and ### for section headings
-- **Bold important concepts, keywords, and definitions**
-- Use bullet points for lists (avoid long paragraphs)
-- Use numbered lists for steps, algorithms, and processes
-- Use tables for comparisons, complexities, or side-by-side explanations
-- Use \`code blocks\` for code examples, syntax, or commands
-- **End every response with a "## 📌 Quick Summary" section** (2-3 key takeaways)
-
-## Content Rules
-- Use **ONLY** the provided document context — never use outside knowledge
-- If the answer isn't in the context, clearly state: "I cannot find this information in the uploaded material."
-- Summarize and paraphrase context — don't copy chunks verbatim
-- Keep responses concise, accurate, and placement-focused
-- Break complex topics into digestible sections
-- Provide examples when possible
-
-## Response Structure
-For concept explanations:
-1. Start with a brief definition (1-2 sentences)
-2. Break down into subsections with headings
-3. Use bullet points for key characteristics
-4. Provide examples or use cases
-5. End with Quick Summary
-
-For interview questions:
-1. Use numbered lists for questions
-2. Provide hints or expected concepts for each
-3. Categorize by difficulty if possible
-
-## Tone
-- Professional yet approachable
-- Encouraging and supportive
-- Technical but clear
-- Focused on placement preparation success
-
----
-
-# Document Context (Retrieved from uploaded material)
-${context}
-${conversationContext}
-
----
-
-# User Question
-${query}
-
----
-
-# Your Response
-Generate a well-structured, Markdown-formatted response following all guidelines above.`;
-
-    // Step 4: Set SSE headers BEFORE streaming
+    // Step 5: Set SSE headers BEFORE streaming
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
 
-    console.log('Starting Groq streaming...');
+    console.log(`Starting Groq streaming with ${historyMessages.length} history turns...`);
 
-    // Step 5: Call Groq LLM with streaming enabled
+    // Step 6: Call Groq LLM with streaming enabled
     const stream = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
-      messages: [
-        {
-          role: "user",
-          content: prompt
-        }
-      ],
+      model: 'llama-3.3-70b-versatile',
+      messages,
       temperature: 0.1,
       max_tokens: 1024,
       stream: true
     });
 
-    // Step 6: Loop through the stream and pipe each token
+    // Step 7: Loop through the stream and pipe each token
     let fullAnswer = '';
     for await (const chunk of stream) {
       const token = chunk.choices[0]?.delta?.content || '';
@@ -285,7 +205,7 @@ Generate a well-structured, Markdown-formatted response following all guidelines
       }
     }
 
-    // Step 7: Send sources as final SSE event and close
+    // Step 8: Send sources as final SSE event and close
     const sources = topChunks.map(chunk => ({
       text: chunk.text.substring(0, 200) + (chunk.text.length > 200 ? '...' : ''),
       score: chunk.score,
@@ -303,8 +223,6 @@ Generate a well-structured, Markdown-formatted response following all guidelines
 
   } catch (error) {
     console.error('RAG streaming error:', error);
-    
-    // Send error as SSE event
     res.write(`data: ${JSON.stringify({ error: error.message, done: true })}\n\n`);
     res.end();
   }
