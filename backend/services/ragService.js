@@ -134,8 +134,8 @@ async function generateAnswer(query, conversationHistory = [], fileIds = null) {
 
     // Step 2: Search stored vectors in Qdrant — scoped to user's fileIds
     console.log('Searching stored vectors...');
-    const topChunks = await searchVectors(queryEmbedding, 5, fileIds);
-
+    const k = isSummaryQuery(query) ? 15 : 5;
+    const topChunks = await searchVectors(queryEmbedding, k, fileIds);
     if (topChunks.length === 0) {
       throw new Error('No documents have been uploaded yet. Please upload a PDF first.');
     }
@@ -144,7 +144,7 @@ async function generateAnswer(query, conversationHistory = [], fileIds = null) {
     // using irrelevant chunks when nothing in the document matches the query.
     // Summary-style queries are exempt: they intentionally score low because
     // they don't target a specific term but still need document-wide context.
-    const SIMILARITY_THRESHOLD = 0.65;
+    const SIMILARITY_THRESHOLD = 0.45;
     if (!isSummaryQuery(query) && topChunks[0].score < SIMILARITY_THRESHOLD) {
       return {
         answer: "I couldn't find information related to your question in the uploaded document.",
@@ -217,7 +217,8 @@ async function streamAnswer(query, res, conversationHistory = [], fileIds = null
 
     // Step 2: Search stored vectors in Qdrant — scoped to user's fileIds
     console.log('Searching stored vectors...');
-    const topChunks = await searchVectors(queryEmbedding, 5, fileIds);
+    const k = isSummaryQuery(query) ? 15 : 5;
+    const topChunks = await searchVectors(queryEmbedding, k, fileIds);
 
     if (topChunks.length === 0) {
       throw new Error('No documents have been uploaded yet. Please upload a PDF first.');
@@ -227,7 +228,7 @@ async function streamAnswer(query, res, conversationHistory = [], fileIds = null
     // using irrelevant chunks when nothing in the document matches the query.
     // Summary-style queries are exempt: they intentionally score low because
     // they don't target a specific term but still need document-wide context.
-    const SIMILARITY_THRESHOLD = 0.65;
+    const SIMILARITY_THRESHOLD = 0.45;
     if (!isSummaryQuery(query) && topChunks[0].score < SIMILARITY_THRESHOLD) {
       // SSE headers may not be set yet — send as a normal done event
       res.setHeader('Content-Type', 'text/event-stream');
