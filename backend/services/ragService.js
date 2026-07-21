@@ -69,6 +69,32 @@ ${context}`;
 }
 
 /**
+ * Detect whether a query is asking for a broad summary/overview of the document.
+ * These queries have inherently low similarity scores against any single chunk
+ * because they are not targeting a specific term — bypass the threshold for them.
+ * 
+ * @param {string} query - Raw user question
+ * @returns {boolean}
+ */
+function isSummaryQuery(query) {
+  const lower = query.toLowerCase();
+  return (
+    lower.includes('summary') ||
+    lower.includes('summarize') ||
+    lower.includes('summarise') ||
+    lower.includes('main concepts') ||
+    lower.includes('key concepts') ||
+    lower.includes('main topics') ||
+    lower.includes('key topics') ||
+    lower.includes('what is this document about') ||
+    lower.includes('what does this document') ||
+    lower.includes('overview') ||
+    lower.includes('tell me about this') ||
+    lower.includes('what is this about')
+  );
+}
+
+/**
  * Build a Groq multi-turn messages array from conversation history.
  * Keeps the last `limit` exchanges (user+assistant pairs) to stay within
  * token budgets while preserving enough context for follow-up questions.
@@ -116,8 +142,10 @@ async function generateAnswer(query, conversationHistory = [], fileIds = null) {
 
     // Reject low-confidence retrievals — don't let the LLM hallucinate
     // using irrelevant chunks when nothing in the document matches the query.
-    const SIMILARITY_THRESHOLD = 0.30;
-    if (topChunks[0].score < SIMILARITY_THRESHOLD) {
+    // Summary-style queries are exempt: they intentionally score low because
+    // they don't target a specific term but still need document-wide context.
+    const SIMILARITY_THRESHOLD = 0.65;
+    if (!isSummaryQuery(query) && topChunks[0].score < SIMILARITY_THRESHOLD) {
       return {
         answer: "I couldn't find information related to your question in the uploaded document.",
         sources: []
@@ -197,8 +225,10 @@ async function streamAnswer(query, res, conversationHistory = [], fileIds = null
 
     // Reject low-confidence retrievals — don't let the LLM hallucinate
     // using irrelevant chunks when nothing in the document matches the query.
-    const SIMILARITY_THRESHOLD = 0.30;
-    if (topChunks[0].score < SIMILARITY_THRESHOLD) {
+    // Summary-style queries are exempt: they intentionally score low because
+    // they don't target a specific term but still need document-wide context.
+    const SIMILARITY_THRESHOLD = 0.65;
+    if (!isSummaryQuery(query) && topChunks[0].score < SIMILARITY_THRESHOLD) {
       // SSE headers may not be set yet — send as a normal done event
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
