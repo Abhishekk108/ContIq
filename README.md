@@ -1,153 +1,178 @@
-# ContIq — Context + IQ
+# ContIQ
 
-ContIQ is a full-stack **Retrieval-Augmented Generation (RAG)** application that turns static PDFs into an interactive, source-grounded knowledge base. It extracts text from uploaded documents, generates local embeddings, stores them as vectors in Qdrant, retrieves the most relevant chunks for a given question using semantic search, and generates grounded responses using the Groq LLM — minimizing hallucinations by ensuring every answer is backed by retrieved context.
+ContIQ is a full-stack Retrieval-Augmented Generation (RAG) application for turning uploaded PDFs into a searchable, source-grounded knowledge assistant. The current version includes a secure user auth flow, MongoDB-backed metadata storage, protected API routes, and a React front end for uploading documents and chatting with the system.
 
----
-
-## RAG Pipeline
-
-```
-               PDF Upload
-                    │
-                    ▼
-             Text Extraction
-               (pdf-parse)
-                    │
-                    ▼
-            Chunk Generation
-         (800 chars, 100 overlap)
-                    │
-                    ▼
-         Xenova/all-MiniLM-L6-v2
-         Local Embedding Model
-                    │
-                    ▼
-          384-D Vector Embeddings
-                    │
-    ────────────────────────────────────
-            User Question
-                   │
-                   ▼
-            Generate Query Embedding
-                   │
-                   ▼
-            Cosine Similarity Search
-                   │
-                   ▼
-            Top-K Relevant Chunks
-                   │
-                   ▼
-            Prompt Construction
-                   │
-                   ▼
-            Groq Llama-3.3-70B
-                   │
-                   ▼
-            Grounded Answer + Sources
-```
 
 ---
 
-## Quick Overview
+## Product overview
 
-- Upload a PDF → text is extracted, chunked, embedded, and stored as vectors.
-- Ask a question → the query is embedded, top-matching chunks are retrieved via cosine similarity, and the LLM streams back a grounded answer with cited sources.
-- Multi-user platform — documents, chats, and query results are isolated per account.
-- Follow-up questions are understood in the context of the ongoing conversation.
+Users can:
 
-Core goals: accuracy (grounded answers), transparency (source attribution), and fast interactive retrieval.
+- sign up and sign in with their own account
+- upload PDF files for indexing
+- ask questions about the uploaded content
+- receive grounded answers using retrieved document chunks
+- continue conversations with chat context
+- keep their own documents and chats isolated behind authenticated access
 
----
-
-## Features
-
-- PDF ingestion and semantic indexing
-- Local embedding generation (no external embedding API dependency)
-- Vector search using Qdrant Cloud
-- JWT authentication with bcrypt password hashing, and multi-user document isolation
-- Token-by-token streaming responses (SSE)
-- Multi-turn conversation support (last 10 messages used as context)
-- Low-confidence retrieval rejection via a similarity threshold
-- Adaptive retrieval depth: Top-15 chunks for document summaries, Top-5 for targeted questions
-- Source-grounded responses with per-source similarity scores
+The application combines local embedding generation, vector similarity search, and an LLM for answer generation while keeping the response anchored to the retrieved content.
 
 ---
 
-## Tech Stack
+## Core features
 
-- Frontend: React 18, React Router, Axios
-- Backend: Node.js, Express, Multer
-- PDF parsing: `pdf-parse`
-- Embeddings: `@xenova/transformers` (local) — Xenova/all-MiniLM-L6-v2 model (384-dimensional vectors)
-- LLM: Groq (via `groq-sdk`) — llama-3.3-70b-versatile, with streaming via Server-Sent Events
-- Vector store: Qdrant Cloud (production-ready vector database)
-- Database: MongoDB Atlas with Mongoose (users, chats, messages, document metadata)
-- Authentication: JWT (`jsonwebtoken`) and `bcryptjs`
+- PDF upload and document ingestion
+- Local embedding generation using Xenova/All-MiniLM-L6-v2
+- Vector search via Qdrant Cloud
+- MongoDB storage for users, chats, and metadata
+- JWT-based authentication with `bcryptjs` password hashing
+- Protected API routes and private frontend pages
+- Streaming answer generation from Groq
+- Multi-turn conversation context
+- Source-based retrieval and grounded responses
 
 ---
 
-## System Architecture
+## Architecture
 
-```
+```text
 React Frontend
-       │
-       ▼
-Express Backend
-       │
-       ├────────► MongoDB Atlas (Users, Chats, Document Metadata)
-       ├────────► Qdrant Cloud (Vector Embeddings)
-       └────────► Groq LLM (Streaming Answer Generation)
+   │
+   ▼
+Express API
+   │
+   ├── MongoDB Atlas / Mongoose
+   │   └── users, chats, document metadata
+   │
+   ├── Qdrant Cloud
+   │   └── vector embeddings / similarity search
+   │
+   └── Groq LLM
+       └── grounded answer generation
 ```
 
-**Updated RAG Flow** — retrieval now runs through a grounding check and history injection before the LLM call, and the response streams back token-by-token:
+The app flow is:
 
-```
-Query → Embedding → Qdrant Search → Similarity Threshold Check
-      → Prompt + Conversation History → Groq LLM (Streaming) → Answer + Sources
+```text
+PDF upload
+  → text extraction
+  → chunking
+  → embedding
+  → vector storage
+  → question embedding
+  → retrieval
+  → grounded prompt + history
+  → streamed LLM response
 ```
 
 ---
 
-## Project Structure
+## Tech stack
 
-- `frontend/` — React app with `UploadPage.jsx` and `ChatPage.jsx`
-- `backend/` — Express API:
-  - `routes/` — `auth.js`, `upload.js`, `query.js`
-  - `controllers/` — request handlers for auth, upload, and query logic
-  - `models/` — Mongoose schemas (User, Chat, Message, Document metadata)
-  - `middleware/` — JWT authentication middleware
-  - `config/` — database and environment configuration
-  - `services/` — `pdfService.js`, `chunkService.js`, `embeddingService.js`, `vectorService.js`, `ragService.js` (grounding, streaming, and history logic live here)
-- Vector storage — Qdrant Cloud cluster, `contiq_vectors` collection
-- Metadata storage — MongoDB Atlas stores user accounts, chats, and document metadata
+- Frontend: React, React Router, Axios
+- Backend: Node.js, Express
+- Auth: JWT + `bcryptjs`
+- Database: MongoDB + Mongoose
+- PDF parsing: `pdf-parse`
+- Embeddings: `@xenova/transformers`
+- Vector store: Qdrant
+- LLM: Groq SDK
+- File uploads: `multer`
 
 ---
 
-## Getting Started (Local Development)
+## Repository structure
 
-Prerequisites
+```text
+contiq/
+├── backend/
+│   ├── config/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── services/
+│   ├── uploads/
+│   ├── server.js
+│   ├── package.json
+│   ├── .env.example
+│   └── .env
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   ├── package.json
+│   └── build/
+├── README.md
+├── MONGODB_INTEGRATION.md
+├── package.json
+└── LICENSE
+```
 
-- Node.js v18+
-- A MongoDB Atlas connection string
-- (Optional) A Groq API key for LLM generation
+---
 
-Backend
+## Prerequisites
+
+Before running the project locally, make sure you have:
+
+- Node.js 18+
+- MongoDB running locally or a MongoDB Atlas connection string
+- Qdrant URL and API key
+- Groq API key
+- Optional: Hugging Face token for model downloads if needed
+
+---
+
+## Environment setup
+
+Create environment variables for the backend before starting the app.
+
+### Backend example
+
+```bash
+cd backend
+cp .env.example .env
+```
+
+Sample configuration:
+
+```env
+PORT=5555
+GROQ_API_KEY=your_groq_api_key_here
+HUGGINGFACE_API_KEY=your_huggingface_api_key_here
+QDRANT_URL=https://your-cluster-url.qdrant.io
+QDRANT_API_KEY=your_api_key_here
+QDRANT_COLLECTION=contiq_vectors
+MONGO_URI=mongodb://localhost:27017/contiq
+JWT_SECRET=your_jwt_secret_key_here
+JWT_EXPIRES=7d
+```
+
+Notes:
+
+- The app defaults to port `5555` in the backend server.
+- `JWT_SECRET` is required for protected routes.
+- `MONGO_URI` is required for MongoDB-backed auth and metadata features.
+
+---
+
+## Running the app
+
+### 1) Start the backend
 
 ```bash
 cd backend
 npm install
-
-# copy and edit environment variables
-cp .env.example .env
-# set MONGO_URI, JWT_SECRET, GROQ_API_KEY, etc.
-
-mkdir -p uploads
 npm run dev
 ```
 
-Notes: On first run, the local embedding model (Xenova) may download and cache model files.
+The backend will:
 
-Frontend
+- connect to MongoDB
+- initialize the local embedding model
+- start the API on `http://localhost:5555`
+
+### 2) Start the frontend
 
 ```bash
 cd frontend
@@ -155,69 +180,124 @@ npm install
 npm start
 ```
 
-Open the frontend at `http://localhost:3000`. The backend defaults to `http://localhost:5000`.
+The frontend should open in the browser on the React dev server, typically at:
+
+```text
+http://localhost:3000
+```
 
 ---
 
-## Environment Variables
+## Authentication and routes
 
-- `QDRANT_URL`, `QDRANT_API_KEY` — Qdrant Cloud cluster URL and key (required)
-- `QDRANT_COLLECTION` — collection name in Qdrant (default: `contiq_vectors`)
-- `GROQ_API_KEY` — required for LLM generation
-- `HUGGINGFACE_API_KEY` — for local embedding model downloads (optional)
-- `MONGO_URI` — MongoDB Atlas connection string (required)
-- `JWT_SECRET`, `JWT_EXPIRES` — JWT signing secret and expiry (e.g. `1d`)
+The backend exposes the following key routes:
 
-Copy `.env.example` to `.env` and add required keys.
+### Public auth routes
 
----
-
-## API Reference
-
-POST /upload 🔒 *(authenticated)*
-Upload a PDF for ingestion and indexing.
-Request: `multipart/form-data` with a `file` field + `Authorization: Bearer <token>`
-Response: `{ message: "PDF processed successfully", chunks: <number> }`
-
-POST /query 🔒 *(authenticated)*
-Submit a question and get a grounded answer.
-Request: `{ "question": "...", "conversationHistory": [...], "chatId": "..." }`
-Response: `{ "answer": "...", "sources": [{ "text": "...", "score": 0.9 }, ...] }`
-
-POST /query/stream 🔒 *(authenticated)*
-Same as `/query`, but streams the answer token-by-token over SSE.
-Request: same body as `/query`
-Response: `text/event-stream` — `data: { "token": "..." }` events, then a final `data: { "sources": [...], "done": true }` event
-
+```http
 POST /auth/register
-Register a new user.
-Request: `{ "name": "...", "email": "...", "password": "..." }`
-
 POST /auth/login
-Authenticate and return a JWT.
-Request: `{ "email": "...", "password": "..." }`
-Response: `{ "token": "...", "user": { "id": "...", "name": "...", "email": "..." } }`
+```
 
-GET /
-Health check and model status endpoint.
+Register a new user or log in with email/password. Successful login returns a JWT token.
+
+### Protected routes
+
+```http
+POST /upload
+POST /query
+POST /query/stream
+GET /user
+GET /chat
+```
+
+These routes require a valid JWT in the Authorization header:
+
+```http
+Authorization: Bearer <token>
+```
+
+The frontend uses a guarded route system so unauthenticated users are redirected to the login page.
 
 ---
 
-## How It Works
+## API flow
 
-**Ingestion** — A PDF is uploaded, text extracted via `pdf-parse`, then split into overlapping chunks (800 chars, 100-char overlap) by `chunkService` so context isn't lost at chunk boundaries. Each chunk is embedded locally into a 384-dimensional vector (Xenova/all-MiniLM-L6-v2, no external API call) and upserted into a Qdrant Cloud collection via `vectorService`, which auto-creates the collection on first use.
+### Registration
 
-**Retrieval** — The user's question is embedded with the same model, and Qdrant performs a cosine similarity search. Most questions retrieve the top 5 chunks; document-wide summary or overview queries (e.g. "summarize this document") retrieve the top 15 instead, since a broad question needs more surrounding context than a narrowly-targeted one.
+```json
+{
+  "name": "Jane Doe",
+  "email": "jane@example.com",
+  "password": "StrongPass123"
+}
+```
 
-**Grounding & Hallucination Prevention** — Before calling the LLM, the top retrieval score is checked against a cosine similarity threshold (0.45). If the best match falls below it, ContIQ skips the LLM call and returns a fixed "not found in the document" response rather than letting the model guess. Summary queries are exempt, since they score lower by nature without being irrelevant.
+### Login
 
-**Conversation History** — The last 10 messages for the active chat are pulled from MongoDB and included alongside the current question, so the LLM can resolve follow-ups like "explain that more simply" using the prior exchange.
+```json
+{
+  "email": "jane@example.com",
+  "password": "StrongPass123"
+}
+```
 
-**Generation** — Retrieved chunks and history are assembled into a prompt that strictly grounds the model in retrieved context. `ragService` sends this to Groq (llama-3.3-70b-versatile) and streams the response back token-by-token over SSE, so the answer appears incrementally. Each response includes the source chunks used, with similarity scores, for transparency.
+Successful login returns a token and user object.
 
-**Auth & Isolation** — Users register/log in via JWT (bcrypt-hashed passwords). Upload and query routes are protected by JWT middleware, and each user's documents, chats, and retrieved chunks are scoped to their own account.
+### Upload
+
+Upload a PDF file as `multipart/form-data` with the authenticated session token.
+
+### Query
+
+```json
+{
+  "question": "Summarize this document",
+  "chatId": "optional-chat-id",
+  "conversationHistory": []
+}
+```
+
+The backend retrieves relevant chunks, checks similarity, builds a grounded prompt, and returns an answer with source context.
 
 ---
+
+## How the RAG pipeline works
+
+1. A PDF is uploaded.
+2. The backend extracts text from the document.
+3. The content is split into manageable chunks.
+4. Chunks are embedded with a local transformer model.
+5. The embeddings are stored in Qdrant.
+6. A user question is embedded and matched against stored vectors.
+7. Relevant chunks are retrieved and used to ground the prompt.
+8. The LLM generates a response based on the retrieved context.
+9. The answer is returned with source-backed references.
+
+---
+
+## Notes and troubleshooting
+
+- If MongoDB fails to connect, verify `MONGO_URI` and that the database service is running.
+- If authentication fails, confirm that the JWT secret is set and the token is being sent on protected requests.
+- If Qdrant calls fail, confirm the cluster URL and API key are valid.
+- The first app run may download the embedding model locally, which can take a few minutes depending on environment and internet access.
+
+---
+
+## Related docs
+
+- [MONGODB_INTEGRATION.md](MONGODB_INTEGRATION.md)
+- [backend/AUTH_MIDDLEWARE.md](backend/AUTH_MIDDLEWARE.md)
+- [backend/AUTH_ROUTES_SETUP.md](backend/AUTH_ROUTES_SETUP.md)
+- [backend/REGISTER_IMPLEMENTATION.md](backend/REGISTER_IMPLEMENTATION.md)
+- [backend/LOGIN_IMPLEMENTATION.md](backend/LOGIN_IMPLEMENTATION.md)
+
+---
+
+## License
+
+This project is provided under the repository license included in the root of this workspace.
 
 ## Key Design Decisions
 
